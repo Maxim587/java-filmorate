@@ -14,8 +14,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("/films")
 @Slf4j
-public class FilmController extends AbstractController<Film> {
+public class FilmController implements FilmorateController<Film> {
     private final Map<Integer, Film> films = new HashMap<>();
+    private int id = 0;
 
     @Override
     public Collection<Film> getList() {
@@ -25,7 +26,7 @@ public class FilmController extends AbstractController<Film> {
     @Override
     public Film create(Film film) {
         log.info("Start adding a new film");
-        film.setId(getNextId(films));
+        film.setId(++id);
         films.put(film.getId(), film);
         log.info("Film with id:{} added", film.getId());
         return film;
@@ -38,18 +39,18 @@ public class FilmController extends AbstractController<Film> {
             log.warn("Film updating failed: id not provided");
             throw new ValidationException("Id должен быть указан");
         }
-        if (films.containsKey(newFilm.getId())) {
-            Film oldFilm = films.get(newFilm.getId());
 
-            oldFilm.setName(newFilm.getName());
-            oldFilm.setDescription(newFilm.getDescription());
-            oldFilm.setReleaseDate(newFilm.getReleaseDate());
-            oldFilm.setDuration(newFilm.getDuration());
-
-            log.info("Film with id:{} updated", oldFilm.getId());
-            return oldFilm;
+        Film oldFilm = films.get(newFilm.getId());
+        if (oldFilm == null) {
+            log.warn("Film updating failed: film with id:{} not found", newFilm.getId());
+            throw new NotFoundException("Фильм с id = " + newFilm.getId() + " не найден");
         }
-        log.warn("Film updating failed: film with id:{} not found", newFilm.getId());
-        throw new NotFoundException("Фильм с id = " + newFilm.getId() + " не найден");
+
+        oldFilm.setName(newFilm.getName());
+        oldFilm.setDescription(newFilm.getDescription());
+        oldFilm.setReleaseDate(newFilm.getReleaseDate());
+        oldFilm.setDuration(newFilm.getDuration());
+        log.info("Film with id:{} updated", oldFilm.getId());
+        return oldFilm;
     }
 }

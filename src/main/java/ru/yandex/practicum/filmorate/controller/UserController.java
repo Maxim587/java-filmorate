@@ -14,8 +14,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("/users")
 @Slf4j
-public class UserController extends AbstractController<User> {
+public class UserController implements FilmorateController<User> {
     private final Map<Integer, User> users = new HashMap<>();
+    private int id = 0;
 
     @Override
     public Collection<User> getList() {
@@ -25,7 +26,7 @@ public class UserController extends AbstractController<User> {
     @Override
     public User create(User user) {
         log.info("Start adding new user");
-        user.setId(getNextId(users));
+        user.setId(++id);
 
         if (user.getName() == null || user.getName().isEmpty()) {
             user.setName(user.getLogin());
@@ -42,22 +43,24 @@ public class UserController extends AbstractController<User> {
             log.warn("User updating failed: id not provided");
             throw new ValidationException("Id должен быть указан");
         }
-        if (users.containsKey(newUser.getId())) {
-            User oldUser = users.get(newUser.getId());
-            if (newUser.getName() == null || newUser.getName().isEmpty()) {
-                oldUser.setName(newUser.getLogin());
-            } else {
-                oldUser.setName(newUser.getName());
-            }
 
-            oldUser.setEmail(newUser.getEmail());
-            oldUser.setLogin(newUser.getLogin());
-            oldUser.setBirthday(newUser.getBirthday());
-
-            log.info("User with id:{} updated", oldUser.getId());
-            return oldUser;
+        User oldUser = users.get(newUser.getId());
+        if (oldUser == null) {
+            log.warn("User updating failed: user with id:{} not found", newUser.getId());
+            throw new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден");
         }
-        log.warn("User updating failed: user with id:{} not found", newUser.getId());
-        throw new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден");
+
+        if (newUser.getName() == null || newUser.getName().isEmpty()) {
+            oldUser.setName(newUser.getLogin());
+        } else {
+            oldUser.setName(newUser.getName());
+        }
+
+        oldUser.setEmail(newUser.getEmail());
+        oldUser.setLogin(newUser.getLogin());
+        oldUser.setBirthday(newUser.getBirthday());
+
+        log.info("User with id:{} updated", oldUser.getId());
+        return oldUser;
     }
 }
