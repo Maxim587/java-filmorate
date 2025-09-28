@@ -10,7 +10,7 @@ import java.lang.annotation.*;
 @Constraint(validatedBy = ReleaseDateFromValidator.class)
 @Documented
 public @interface ReleaseDateFrom {
-    String message() default "должно быть не ранее 28.12.1895";
+    String message() default "Дата должна быть не ранее 28.12.1895";
 
     Class<?>[] groups() default {};
 
