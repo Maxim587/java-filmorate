@@ -15,16 +15,21 @@ public class User {
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     private final Set<Integer> friends = new HashSet<>();
+
     @Positive(message = "Значение должно быть целым положительным числом")
     @Max(Integer.MAX_VALUE)
     private Integer id;
+
     @NotBlank(message = "Значение не должно быть пустым")
     @Email(message = "Значение должно соответствовать формату email")
     private String email;
+
     @Pattern(regexp = "\\S+", message = "Логин не должен содержать пробелы")
     @NotNull(message = "Значение не должно быть пустым")
     private String login;
+
     private String name;
+
     @Past(message = "Дата должна быть в прошлом")
     private LocalDate birthday;
 

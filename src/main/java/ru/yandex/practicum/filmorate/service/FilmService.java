@@ -62,7 +62,7 @@ public class FilmService {
             throw new NotFoundException("Ошибка добавления лайка к фильму. Пользователь не найден");
         }
 
-        film.addLike(user);
+        film.addLike(user.getId());
     }
 
     public void deleteLike(int filmId, int userId) {
@@ -76,7 +76,7 @@ public class FilmService {
             throw new NotFoundException("Ошибка удаления лайка к фильму. Пользователь не найден");
         }
 
-        film.deleteLike(user);
+        film.deleteLike(user.getId());
     }
 
     public Collection<Film> getMostPopular(int count) {

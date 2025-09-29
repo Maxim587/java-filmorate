@@ -17,25 +17,30 @@ public class Film {
 
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
-    private final Set<User> likes = new HashSet<>();
+    private final Set<Integer> likes = new HashSet<>();
+
     @Positive(message = "Значение должно быть целым положительным числом")
     @Max(Integer.MAX_VALUE)
     private Integer id;
+
     @NotBlank(message = "Значение не должно быть пустым")
     private String name;
+
     @Size(max = 200, message = "Длина не должна превышать 200 символов")
     private String description;
+
     @ReleaseDateFrom
     private LocalDate releaseDate;
+
     @Positive(message = "Значение должно быть целым положительным числом")
     private int duration;
 
-    public boolean addLike(User user) {
-        return likes.add(user);
+    public boolean addLike(Integer userId) {
+        return likes.add(userId);
     }
 
-    public boolean deleteLike(User user) {
-        return likes.remove(user);
+    public boolean deleteLike(Integer userId) {
+        return likes.remove(userId);
     }
 
     public int getLikesCount() {
