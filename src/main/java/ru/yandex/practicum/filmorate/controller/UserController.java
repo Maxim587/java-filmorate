@@ -1,66 +1,72 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
 
+@Slf4j
 @RestController
 @RequestMapping("/users")
-@Slf4j
-public class UserController implements FilmorateController<User> {
-    private final Map<Integer, User> users = new HashMap<>();
-    private int id = 0;
+@RequiredArgsConstructor
+public class UserController {
 
-    @Override
-    public Collection<User> getList() {
-        return users.values();
+    private final UserService userService;
+
+    @GetMapping
+    public Collection<User> findAll() {
+        return userService.findAll();
     }
 
-    @Override
-    public User create(User user) {
+    @GetMapping("/{id}")
+    public Optional<User> findById(@PathVariable int id) {
+        return userService.findById(id);
+    }
+
+    @GetMapping("/{id}/friends")
+    public Collection<User> getUserFriends(@PathVariable int id) {
+        log.info("Start getting user's friends for user id = {}", id);
+        return userService.getFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public Collection<User> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
+        log.info("Start getting common friends for user id = {} and user id = {}", id, otherId);
+        return userService.getCommonFriends(id, otherId);
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public User create(@Valid @RequestBody User user) {
         log.info("Start adding new user");
-        user.setId(++id);
-
-        if (user.getName() == null || user.getName().isEmpty()) {
-            user.setName(user.getLogin());
-        }
-        users.put(user.getId(), user);
-        log.info("User with id:{} added", user.getId());
-        return user;
+        User createdUser = userService.create(user);
+        log.info("User with id:{} added", createdUser.getId());
+        return createdUser;
     }
 
-    @Override
-    public User update(User newUser) {
+    @PutMapping
+    public User update(@Valid @RequestBody User newUser) {
         log.info("Start updating user with id:{}", newUser.getId());
-        if (newUser.getId() == null) {
-            log.warn("User updating failed: id not provided");
-            throw new ValidationException("Id должен быть указан");
-        }
+        User updatedUser = userService.update(newUser);
+        log.info("User with id:{} updated", updatedUser.getId());
+        return updatedUser;
+    }
 
-        User oldUser = users.get(newUser.getId());
-        if (oldUser == null) {
-            log.warn("User updating failed: user with id:{} not found", newUser.getId());
-            throw new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден");
-        }
+    @PutMapping("/{id}/friends/{friendId}")
+    public void addFriend(@PathVariable int id, @PathVariable int friendId) {
+        log.info("Start adding friend with id = {} to user with id = {}", friendId, id);
+        userService.addFriend(id, friendId);
+    }
 
-        if (newUser.getName() == null || newUser.getName().isEmpty()) {
-            oldUser.setName(newUser.getLogin());
-        } else {
-            oldUser.setName(newUser.getName());
-        }
-
-        oldUser.setEmail(newUser.getEmail());
-        oldUser.setLogin(newUser.getLogin());
-        oldUser.setBirthday(newUser.getBirthday());
-
-        log.info("User with id:{} updated", oldUser.getId());
-        return oldUser;
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public void deleteFriend(@PathVariable int id, @PathVariable int friendId) {
+        log.info("Start deleting friend with id = {} from user with id = {}", friendId, id);
+        userService.deleteFriend(id, friendId);
     }
 }
