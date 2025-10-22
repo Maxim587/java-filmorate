@@ -13,7 +13,9 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.validation.ReleaseDateFrom;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 class FilmTests {
 
@@ -22,7 +24,7 @@ class FilmTests {
 
     @BeforeEach
     public void prepare() {
-        newFilm = new Film(null, "nameN", "descriptionNO", LocalDate.of(2002, 5, 15), 120);
+        newFilm = new Film(null, "nameN", "descriptionNO", LocalDate.of(2002, 5, 15), 120, "R", Stream.of("Horror").toList());
         validator = Validation.buildDefaultValidatorFactory().getValidator();
     }
 

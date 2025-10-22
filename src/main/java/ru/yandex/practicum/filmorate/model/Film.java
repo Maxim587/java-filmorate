@@ -9,15 +9,13 @@ import ru.yandex.practicum.filmorate.validation.ReleaseDateFrom;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class Film {
-
-    @Getter(AccessLevel.NONE)
-    @Setter(AccessLevel.NONE)
-    private final Set<Integer> likes = new HashSet<>();
 
     @Positive(message = "Значение должно быть целым положительным числом")
     @Max(Integer.MAX_VALUE)
@@ -34,6 +32,15 @@ public class Film {
 
     @Positive(message = "Значение должно быть целым положительным числом")
     private int duration;
+
+    private String rating;
+
+    private List<String> genre;
+
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private final Set<Integer> likes = new HashSet<>();
+
 
     public boolean addLike(Integer userId) {
         return likes.add(userId);

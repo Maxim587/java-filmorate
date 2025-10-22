@@ -5,11 +5,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.NewUserDto;
+import ru.yandex.practicum.filmorate.dto.UpdateUserDto;
+import ru.yandex.practicum.filmorate.dto.UserDto;
+import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
-import java.util.Optional;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -19,43 +24,31 @@ public class UserController {
 
     private final UserService userService;
 
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserDto create(@Valid @RequestBody NewUserDto newUserDto) {
+        log.info("Start adding new user");
+        UserDto userDto = userService.create(newUserDto);
+        log.info("User with id:{} added", userDto.getId());
+        return userDto;
+    }
+
     @GetMapping
-    public Collection<User> findAll() {
+    public Collection<UserDto> findAll() {
         return userService.findAll();
     }
 
     @GetMapping("/{id}")
-    public Optional<User> findById(@PathVariable int id) {
+    public UserDto findById(@PathVariable int id) {
         return userService.findById(id);
     }
 
-    @GetMapping("/{id}/friends")
-    public Collection<User> getUserFriends(@PathVariable int id) {
-        log.info("Start getting user's friends for user id = {}", id);
-        return userService.getFriends(id);
-    }
-
-    @GetMapping("/{id}/friends/common/{otherId}")
-    public Collection<User> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
-        log.info("Start getting common friends for user id = {} and user id = {}", id, otherId);
-        return userService.getCommonFriends(id, otherId);
-    }
-
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public User create(@Valid @RequestBody User user) {
-        log.info("Start adding new user");
-        User createdUser = userService.create(user);
-        log.info("User with id:{} added", createdUser.getId());
-        return createdUser;
-    }
-
     @PutMapping
-    public User update(@Valid @RequestBody User newUser) {
-        log.info("Start updating user with id:{}", newUser.getId());
-        User updatedUser = userService.update(newUser);
-        log.info("User with id:{} updated", updatedUser.getId());
-        return updatedUser;
+    public UserDto update(@Valid @RequestBody UpdateUserDto updateUserDto) {
+        log.info("Start updating user with id:{}", updateUserDto.getId());
+        UserDto userDto = userService.update(updateUserDto);
+        log.info("User with id:{} updated", userDto.getId());
+        return userDto;
     }
 
     @PutMapping("/{id}/friends/{friendId}")
@@ -64,9 +57,28 @@ public class UserController {
         userService.addFriend(id, friendId);
     }
 
-    @DeleteMapping("/{id}/friends/{friendId}")
-    public void deleteFriend(@PathVariable int id, @PathVariable int friendId) {
-        log.info("Start deleting friend with id = {} from user with id = {}", friendId, id);
-        userService.deleteFriend(id, friendId);
+    @GetMapping("/{id}/friends")
+    public Collection<UserDto> getUserFriends(@PathVariable int id) {
+        log.info("Start getting user's friends for user id = {}", id);
+        return userService.getFriends(id);
     }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public boolean deleteFriend(@PathVariable int id, @PathVariable int friendId) {
+        log.info("Start deleting friend with id = {} from user with id = {}", friendId, id);
+        return userService.deleteFriend(id, friendId);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public Collection<UserDto> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
+        log.info("Start getting common friends for user id = {} and user id = {}", id, otherId);
+        return userService.getCommonFriends(id, otherId);
+    }
+
+
+//    @GetMapping("/{id}/friendss")
+//    public Map<Integer, List<Friendship>> findFriends(@PathVariable int id) {
+//        log.info("Start getting friends for user id = {}", id);
+//        return userService.findFriends(id);
+//    }
 }

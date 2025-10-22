@@ -1,18 +1,16 @@
-package ru.yandex.practicum.filmorate.model;
+package ru.yandex.practicum.filmorate.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
-import lombok.*;
+import lombok.Data;
 
 import java.time.LocalDate;
-import java.util.*;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class User {
+public class UpdateUserDto {
 
-    @Positive(message = "Значение должно быть целым положительным числом")
     @Max(Integer.MAX_VALUE)
+    @Positive(message = "Значение должно быть целым положительным числом")
     private Integer id;
 
     @NotBlank(message = "Значение не должно быть пустым")
@@ -27,18 +25,4 @@ public class User {
 
     @Past(message = "Дата должна быть в прошлом")
     private LocalDate birthday;
-
-    private final Map<Integer, Friendship> friends = new HashMap<>();
-
-    public void addFriend(Friendship friendship) {
-        friends.put(friendship.getFriendId(), friendship);
-    }
-
-    public void deleteFriend(int friendId) {
-        friends.remove(friendId);
-    }
-
-    public Collection<Integer> getFriendsIds() {
-        return friends.keySet();
-    }
 }
