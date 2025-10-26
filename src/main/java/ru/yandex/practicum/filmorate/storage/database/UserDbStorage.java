@@ -21,26 +21,33 @@ import java.util.*;
 @Repository
 public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
+    private static final String FIND_ALL_QUERY =
+            "SELECT * FROM users";
+    private static final String FIND_BY_ID_QUERY =
+            "SELECT * FROM users WHERE user_id = ?";
+    private static final String INSERT_QUERY = "INSERT INTO users(email, login, name, birthday)" +
+            "VALUES (?, ?, ?, ?)";
+    private static final String UPDATE_QUERY = "UPDATE users " +
+            "SET email = ?, login = ?, name = ?, birthday = ? " +
+            "WHERE user_id = ?";
+    private static final String FIND_ALL_USERS_FRIENDS_QUERY = "SELECT f.user_id, f.friend_id, fs.status " +
+            "FROM friendship f " +
+            "JOIN friendship_status fs ON f.friendship_status_id = fs.friendship_status_id " +
+            "WHERE f.user_id IN (:ids)";
+    private static final String UPDATE_FRIENDSHIP_STATUS_QUERY = "UPDATE friendship " +
+            "SET friendship_status_id = ? " +
+            "WHERE user_id = ? AND friend_id = ?;";
+    private static final String ADD_FRIEND_QUERY = "INSERT INTO friendship (user_id, friend_id, friendship_status_id) " +
+            "VALUES (?, ?, ?);";
+    private static final String DELETE_FRIEND_QUERY = "DELETE FROM friendship " +
+            "WHERE user_id = ? AND friend_id = ?";
+
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
     }
 
-    private static final String FIND_ALL_QUERY = "SELECT * FROM users";
-    private static final String FIND_BY_ID_QUERY = "SELECT * FROM users WHERE user_id = ?";
-    private static final String INSERT_QUERY = "INSERT INTO users(email, login, name, birthday)" +
-            "VALUES (?, ?, ?, ?)";
-    private static final String UPDATE_QUERY = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE user_id = ?";
-    //private static final String FIND_USER_FRIENDS_QUERY = "SELECT f.friend_id, fs.status FROM friendship f JOIN friendship_status fs on f.friendship_status_id = fs.friendship_status_id WHERE f.user_id = ?";
-    private static final String FIND_ALL_USERS_FRIENDS_QUERY = "SELECT f.user_id, f.friend_id, fs.status " +
-            "FROM friendship f JOIN friendship_status fs on f.friendship_status_id = fs.friendship_status_id WHERE f.user_id IN (:ids)";
-    private static final String UPDATE_FRIENDSHIP_STATUS_QUERY = "UPDATE friendship SET friendship_status_id = ? " +
-            "WHERE user_id = ? AND friend_id = ?;";
-    private static final String ADD_FRIEND_QUERY = "INSERT INTO friendship (user_id, friend_id, friendship_status_id) " +
-            "VALUES (?, ?, ?);";
-    private static final String DELETE_FRIEND_QUERY = "DELETE FROM friendship WHERE user_id = ? AND friend_id = ?";
-
     @Override
-    public User addUser(User user) {
+    public User createUser(User user) {
         int id = insert(
                 INSERT_QUERY,
                 user.getEmail(),
@@ -53,21 +60,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     }
 
     @Override
-    public User updateUser(User user) {
-        update(
-                UPDATE_QUERY,
-                user.getEmail(),
-                user.getLogin(),
-                user.getName(),
-                Date.valueOf(user.getBirthday()),
-                user.getId()
-        );
-        return user;
-    }
-
-
-    @Override
-    public Collection<User> getUsers() {
+    public List<User> getAllUsers() {
         List<User> users = findMany(FIND_ALL_QUERY);
         if (users.isEmpty()) {
             return users;
@@ -98,8 +91,35 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
                 friendship.forEach(user::addFriend);
             }
         }
-
         return user;
+    }
+
+    @Override
+    public User updateUser(User user) {
+        update(
+                UPDATE_QUERY,
+                user.getEmail(),
+                user.getLogin(),
+                user.getName(),
+                Date.valueOf(user.getBirthday()),
+                user.getId()
+        );
+        return user;
+    }
+
+    @Override
+    public void addFriend(int userId, int friendId, int friendshipStatusId) {
+        update(ADD_FRIEND_QUERY, userId, friendId, friendshipStatusId);
+    }
+
+    @Override
+    public void updateFriendshipStatus(int userId, int friendId, int friendshipStatusId) {
+        update(UPDATE_FRIENDSHIP_STATUS_QUERY, friendshipStatusId, userId, friendId);
+    }
+
+    @Override
+    public boolean deleteFriend(int userId, int friendId) {
+        return delete(DELETE_FRIEND_QUERY, userId, friendId);
     }
 
     public Map<Integer, List<Friendship>> findFriends(List<Integer> userIds) {
@@ -125,20 +145,5 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
                 throw new InternalServerException("Не удалось получить данные");
             }
         });
-    }
-
-    @Override
-    public void updateFriendshipStatus(int userId, int friendId, int friendshipStatusId) {
-        update(UPDATE_FRIENDSHIP_STATUS_QUERY, friendshipStatusId, userId, friendId);
-    }
-
-    @Override
-    public void addFriend(int userId, int friendId, int friendshipStatusId) {
-        update(ADD_FRIEND_QUERY, userId, friendId, friendshipStatusId);
-    }
-
-    @Override
-    public boolean deleteFriend(int userId, int friendId) {
-        return delete(DELETE_FRIEND_QUERY, userId, friendId);
     }
 }

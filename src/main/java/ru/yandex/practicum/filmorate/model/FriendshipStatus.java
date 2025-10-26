@@ -9,9 +9,6 @@ public enum FriendshipStatus {
         this.id = id;
     }
 
-    public int getId() {
-        return id;
-    }
     public static FriendshipStatus fromValue(int id) {
         for (FriendshipStatus status : values()) {
             if (status.id == id) {
@@ -19,5 +16,9 @@ public enum FriendshipStatus {
             }
         }
         throw new IllegalArgumentException("Некорректное значение id");
+    }
+
+    public int getId() {
+        return id;
     }
 }

@@ -1,6 +1,5 @@
-package ru.yandex.practicum.filmorate.dto;
+package ru.yandex.practicum.filmorate.dto.user;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -9,6 +8,7 @@ import java.time.LocalDate;
 @Data
 public class UpdateUserDto {
 
+    @NotNull
     @Max(Integer.MAX_VALUE)
     @Positive(message = "Значение должно быть целым положительным числом")
     private Integer id;

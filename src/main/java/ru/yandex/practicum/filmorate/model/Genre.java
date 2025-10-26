@@ -2,10 +2,12 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
-public class Rating {
-    private int rating_id;
-    private String name;
+@NoArgsConstructor
+public class Genre {
+    Integer id;
+    String name;
 }

@@ -8,8 +8,8 @@ import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -19,15 +19,15 @@ public class InMemoryUserStorage implements UserStorage {
     private int id = 0;
 
     @Override
-    public User addUser(User user) {
+    public User createUser(User user) {
         user.setId(++id);
         users.put(user.getId(), user);
         return user;
     }
 
     @Override
-    public Collection<User> getUsers() {
-        return users.values();
+    public List<User> getAllUsers() {
+        return users.values().stream().toList();
     }
 
     @Override
@@ -37,6 +37,7 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User updateUser(User user) {
+        users.put(user.getId(), user);
         return user;
     }
 

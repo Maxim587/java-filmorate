@@ -1,11 +1,13 @@
 package ru.yandex.practicum.filmorate.mapper;
 
-import ru.yandex.practicum.filmorate.dto.NewUserDto;
-import ru.yandex.practicum.filmorate.dto.UpdateUserDto;
-import ru.yandex.practicum.filmorate.dto.UserDto;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import ru.yandex.practicum.filmorate.dto.user.NewUserDto;
+import ru.yandex.practicum.filmorate.dto.user.UpdateUserDto;
+import ru.yandex.practicum.filmorate.dto.user.UserDto;
 import ru.yandex.practicum.filmorate.model.User;
 
-
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class UserMapper {
     public static UserDto mapToUserDto(User user) {
         UserDto dto = new UserDto();

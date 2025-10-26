@@ -5,11 +5,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.film.FilmDto;
+import ru.yandex.practicum.filmorate.dto.film.NewFilmDto;
+import ru.yandex.practicum.filmorate.dto.film.UpdateFilmDto;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
-import java.util.Collection;
-import java.util.Optional;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -20,33 +22,36 @@ public class FilmController {
     private final FilmService filmService;
 
     @GetMapping
-    public Collection<Film> findAll() {
-        return filmService.findAll();
+    public List<FilmDto> findAll() {
+        log.info("Start getting all films");
+        return filmService.getAllFilms();
     }
 
     @GetMapping("/{id}")
-    public Optional<Film> findById(@PathVariable int id) {
-        return filmService.findById(id);
+    public FilmDto findById(@PathVariable int id) {
+        log.info("Start getting film by id {}", id);
+        return filmService.getFilmById(id);
     }
 
     @GetMapping("/popular")
-    public Collection<Film> getPopular(@RequestParam(defaultValue = "10") int count) {
+    public List<Film> getPopular(@RequestParam(defaultValue = "10") int count) {
+        log.info("Start getting popular films");
         return filmService.getMostPopular(count);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Film create(@Valid @RequestBody Film film) {
+    public FilmDto create(@Valid @RequestBody NewFilmDto newFilmDto) {
         log.info("Start adding a new film");
-        Film createdFilm = filmService.create(film);
+        FilmDto createdFilm = filmService.createFilm(newFilmDto);
         log.info("Film with id:{} added", createdFilm.getId());
         return createdFilm;
     }
 
     @PutMapping
-    public Film update(@Valid @RequestBody Film newFilm) {
+    public FilmDto update(@Valid @RequestBody UpdateFilmDto newFilm) {
         log.info("Start updating film with id:{}", newFilm.getId());
-        Film updatedFilm = filmService.update(newFilm);
+        FilmDto updatedFilm = filmService.updateFilm(newFilm);
         log.info("Film with id:{} updated", updatedFilm.getId());
         return updatedFilm;
     }
