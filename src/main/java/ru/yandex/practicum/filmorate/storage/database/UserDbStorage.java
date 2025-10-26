@@ -22,24 +22,24 @@ import java.util.*;
 public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
     private static final String FIND_ALL_QUERY =
-            "SELECT * FROM users";
+            "SELECT * FROM USERS";
     private static final String FIND_BY_ID_QUERY =
-            "SELECT * FROM users WHERE user_id = ?";
-    private static final String INSERT_QUERY = "INSERT INTO users(email, login, name, birthday)" +
+            "SELECT * FROM USERS WHERE user_id = ?";
+    private static final String INSERT_QUERY = "INSERT INTO USERS(email, login, name, birthday)" +
             "VALUES (?, ?, ?, ?)";
-    private static final String UPDATE_QUERY = "UPDATE users " +
+    private static final String UPDATE_QUERY = "UPDATE USERS " +
             "SET email = ?, login = ?, name = ?, birthday = ? " +
             "WHERE user_id = ?";
     private static final String FIND_ALL_USERS_FRIENDS_QUERY = "SELECT f.user_id, f.friend_id, fs.status " +
-            "FROM friendship f " +
-            "JOIN friendship_status fs ON f.friendship_status_id = fs.friendship_status_id " +
+            "FROM FRIENDSHIP f " +
+            "JOIN FRIENDSHIP_STATUS fs ON f.friendship_status_id = fs.friendship_status_id " +
             "WHERE f.user_id IN (:ids)";
-    private static final String UPDATE_FRIENDSHIP_STATUS_QUERY = "UPDATE friendship " +
+    private static final String UPDATE_FRIENDSHIP_STATUS_QUERY = "UPDATE FRIENDSHIP " +
             "SET friendship_status_id = ? " +
             "WHERE user_id = ? AND friend_id = ?;";
-    private static final String ADD_FRIEND_QUERY = "INSERT INTO friendship (user_id, friend_id, friendship_status_id) " +
+    private static final String ADD_FRIEND_QUERY = "INSERT INTO FRIENDSHIP (user_id, friend_id, friendship_status_id) " +
             "VALUES (?, ?, ?);";
-    private static final String DELETE_FRIEND_QUERY = "DELETE FROM friendship " +
+    private static final String DELETE_FRIEND_QUERY = "DELETE FROM FRIENDSHIP " +
             "WHERE user_id = ? AND friend_id = ?";
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {

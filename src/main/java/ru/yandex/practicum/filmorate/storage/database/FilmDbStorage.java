@@ -20,43 +20,43 @@ import java.util.List;
 public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     private static final String FIND_ALL_FILMS_QUERY = "SELECT f.*, r.name as rating_name " +
-            "FROM film f " +
-            "LEFT JOIN rating r ON f.rating_id = r.rating_id";
+            "FROM FILM f " +
+            "LEFT JOIN RATING r ON f.rating_id = r.rating_id";
     private static final String FIND_FILM_BY_ID_QUERY = "SELECT f.*, r.name as rating_name " +
-            "FROM film f " +
-            "LEFT JOIN rating r ON f.rating_id = r.rating_id " +
+            "FROM FILM f " +
+            "LEFT JOIN RATING r ON f.rating_id = r.rating_id " +
             "WHERE film_id = ?";
-    private static final String INSERT_FILM_QUERY = "INSERT INTO film(name, description, release_date, duration, rating_id) " +
+    private static final String INSERT_FILM_QUERY = "INSERT INTO FILM(name, description, release_date, duration, rating_id) " +
             "VALUES (?, ?, ?, ?, ?)";
-    private static final String UPDATE_QUERY = "UPDATE film " +
+    private static final String UPDATE_QUERY = "UPDATE FILM " +
             "SET name = ?, description = ?, release_date = ?, duration = ?, rating_id = ?";
     private static final String MOST_POPULAR_FILMS_QUERY = "SELECT f.*, r.name as rating_name " +
-            "FROM film f JOIN " +
-            "(SELECT film_id, count(user_id) AS likes_count FROM film_like GROUP BY film_id ORDER BY count(user_id) DESC, film_id LIMIT ?) p " +
+            "FROM FILM f JOIN " +
+            "(SELECT film_id, count(user_id) AS likes_count FROM FILM_LIKE GROUP BY film_id ORDER BY count(user_id) DESC, film_id LIMIT ?) p " +
             "ON (f.film_id = p.film_id) " +
-            "JOIN rating r ON (f.rating_id = r.rating_id) " +
+            "JOIN RATING r ON (f.rating_id = r.rating_id) " +
             "ORDER BY p.likes_count DESC";
     private static final String ADD_GENRE_QUERY =
-            "INSERT INTO film_genre(film_id, genre_id) VALUES (?, ?)";
+            "INSERT INTO FILM_GENRE(film_id, genre_id) VALUES (?, ?)";
     private static final String FILM_GENRES_QUERY =
-            "SELECT g.genre_id, g.name FROM film_genre fg " +
-                    "JOIN genre g ON fg.genre_id = g.genre_id WHERE film_id = ?";
+            "SELECT g.genre_id, g.name FROM FILM_GENRE fg " +
+                    "JOIN GENRE g ON fg.genre_id = g.genre_id WHERE film_id = ?";
     private static final String ALL_GENRES_QUERY =
-            "SELECT * FROM genre";
+            "SELECT * FROM GENRE";
     private static final String FIND_GENRE_BY_ID_QUERY =
-            "SELECT * FROM genre WHERE genre_id = ?";
+            "SELECT * FROM GENRE WHERE genre_id = ?";
     private static final String DELETE_FILM_GENRES_QUERY =
-            "DELETE FROM film_genre WHERE film_id = ?";
+            "DELETE FROM FILM_GENRE WHERE film_id = ?";
     private static final String ALL_RATINGS_QUERY =
-            "SELECT * FROM rating";
+            "SELECT * FROM RATING";
     private static final String FIND_RATING_BY_ID_QUERY =
-            "SELECT rating_id, name FROM rating WHERE rating_id = ?";
+            "SELECT rating_id, name FROM RATING WHERE rating_id = ?";
     private static final String FILM_LIKES_QUERY =
-            "SELECT user_id FROM film_like WHERE film_id = ?";
+            "SELECT user_id FROM FILM_LIKE WHERE film_id = ?";
     private static final String ADD_LIKE_QUERY =
-            "MERGE INTO film_like (film_id, user_id) KEY (film_id, user_id) VALUES (?, ?)";
+            "MERGE INTO FILM_LIKE (film_id, user_id) KEY (film_id, user_id) VALUES (?, ?)";
     private static final String DELETE_LIKE_QUERY =
-            "DELETE FROM film_like where film_id = ? AND user_id = ?";
+            "DELETE FROM FILM_LIKE where film_id = ? AND user_id = ?";
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
