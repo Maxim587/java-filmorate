@@ -7,7 +7,7 @@ import ru.yandex.practicum.filmorate.dto.MpaRequestDto;
 import ru.yandex.practicum.filmorate.validation.ReleaseDateFrom;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Set;
 
 @Data
 public class UpdateFilmDto {
@@ -32,5 +32,5 @@ public class UpdateFilmDto {
     @NotNull
     private MpaRequestDto mpa;
 
-    private List<GenreRequestDto> genres;
+    private Set<GenreRequestDto> genres;
 }

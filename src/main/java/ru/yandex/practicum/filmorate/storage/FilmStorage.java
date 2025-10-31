@@ -15,8 +15,6 @@ public interface FilmStorage {
 
     Film updateFilm(Film newFilm);
 
-    List<Genre> getFilmGenres(int filmId);
-
     List<Genre> getAllGenres();
 
     Genre getGenreById(int genreId);

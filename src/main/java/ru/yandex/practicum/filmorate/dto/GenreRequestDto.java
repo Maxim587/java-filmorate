@@ -6,5 +6,5 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(of = {"id"})
 public class GenreRequestDto {
-    private Integer id;
+    private int id;
 }

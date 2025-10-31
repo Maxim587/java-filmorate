@@ -15,7 +15,6 @@ import ru.yandex.practicum.filmorate.dto.film.NewFilmDto;
 import ru.yandex.practicum.filmorate.validation.ReleaseDateFrom;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Set;
 
 class FilmTests {
@@ -35,7 +34,7 @@ class FilmTests {
         newFilm.setReleaseDate(LocalDate.of(2002, 5, 15));
         newFilm.setDuration(120);
         newFilm.setMpa(mpa);
-        newFilm.setGenres(List.of(genre));
+        newFilm.setGenres(Set.of(genre));
 
         validator = Validation.buildDefaultValidatorFactory().getValidator();
     }

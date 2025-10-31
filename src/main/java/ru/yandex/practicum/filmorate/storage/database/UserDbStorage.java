@@ -4,17 +4,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.model.Friendship;
-import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.sql.Date;
-import java.sql.ResultSet;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Primary
@@ -22,18 +20,27 @@ import java.util.*;
 public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
     private static final String FIND_ALL_QUERY =
-            "SELECT * FROM USERS";
+            "SELECT u.USER_ID, u.EMAIL, u.LOGIN, u.NAME, u.BIRTHDAY, f.FRIEND_ID, fs.STATUS " +
+                    "FROM USERS u " +
+                    "LEFT JOIN FRIENDSHIP f USING(USER_ID) " +
+                    "LEFT JOIN FRIENDSHIP_STATUS fs ON f.FRIENDSHIP_STATUS_ID = fs.FRIENDSHIP_STATUS_ID";
     private static final String FIND_BY_ID_QUERY =
-            "SELECT * FROM USERS WHERE user_id = ?";
+            "SELECT u.USER_ID, u.EMAIL, u.LOGIN, u.NAME, u.BIRTHDAY, f.FRIEND_ID, fs.STATUS " +
+                    "FROM USERS u " +
+                    "LEFT JOIN FRIENDSHIP f USING(USER_ID) " +
+                    "LEFT JOIN FRIENDSHIP_STATUS fs ON f.FRIENDSHIP_STATUS_ID = fs.FRIENDSHIP_STATUS_ID " +
+                    "WHERE u.USER_ID = ?";
+    private static final String FIND_USERS_BY_IDS_QUERY =
+            "SELECT u.USER_ID, u.EMAIL, u.LOGIN, u.NAME, u.BIRTHDAY, f.FRIEND_ID, fs.STATUS " +
+                    "FROM USERS u " +
+                    "LEFT JOIN FRIENDSHIP f USING(USER_ID) " +
+                    "LEFT JOIN FRIENDSHIP_STATUS fs ON f.FRIENDSHIP_STATUS_ID = fs.FRIENDSHIP_STATUS_ID " +
+                    "WHERE u.USER_ID IN (:param)";
     private static final String INSERT_QUERY = "INSERT INTO USERS(email, login, name, birthday)" +
             "VALUES (?, ?, ?, ?)";
     private static final String UPDATE_QUERY = "UPDATE USERS " +
             "SET email = ?, login = ?, name = ?, birthday = ? " +
             "WHERE user_id = ?";
-    private static final String FIND_ALL_USERS_FRIENDS_QUERY = "SELECT f.user_id, f.friend_id, fs.status " +
-            "FROM FRIENDSHIP f " +
-            "JOIN FRIENDSHIP_STATUS fs ON f.friendship_status_id = fs.friendship_status_id " +
-            "WHERE f.user_id IN (:ids)";
     private static final String UPDATE_FRIENDSHIP_STATUS_QUERY = "UPDATE FRIENDSHIP " +
             "SET friendship_status_id = ? " +
             "WHERE user_id = ? AND friend_id = ?;";
@@ -41,6 +48,12 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
             "VALUES (?, ?, ?);";
     private static final String DELETE_FRIEND_QUERY = "DELETE FROM FRIENDSHIP " +
             "WHERE user_id = ? AND friend_id = ?";
+    private static final String FIND_USER_FRIENDS_QUERY = "SELECT u.USER_ID, u.EMAIL, u.LOGIN, u.NAME, u.BIRTHDAY, f2.FRIEND_ID, fs.STATUS " +
+            "FROM FRIENDSHIP f1 " +
+            "JOIN USERS u ON f1.FRIEND_ID = u.USER_ID " +
+            "LEFT JOIN FRIENDSHIP f2 ON u.USER_ID = f2.USER_ID left JOIN FRIENDSHIP_STATUS fs ON f2.FRIENDSHIP_STATUS_ID = fs.FRIENDSHIP_STATUS_ID " +
+            "WHERE f1.USER_ID = ? " +
+            "ORDER BY u.USER_ID";
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
@@ -61,37 +74,20 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
     @Override
     public List<User> getAllUsers() {
-        List<User> users = findMany(FIND_ALL_QUERY);
-        if (users.isEmpty()) {
-            return users;
+        List<User> rawUsers = findMany(FIND_ALL_QUERY);
+        if (rawUsers.isEmpty()) {
+            return rawUsers;
         }
-
-        List<Integer> userIds = users.stream().map(User::getId).toList();
-        Map<Integer, List<Friendship>> usersFriends = findFriends(userIds);
-        if (usersFriends.isEmpty()) {
-            return users;
-        }
-
-        usersFriends.forEach((k, v) -> {
-            User user = users.stream()
-                    .filter(usr -> Objects.equals(usr.getId(), k))
-                    .findFirst()
-                    .get();
-            v.forEach(user::addFriend);
-        });
-        return users;
+        return groupValues(rawUsers);
     }
 
     @Override
     public User getUserById(int userId) {
-        User user = findOne(FIND_BY_ID_QUERY, userId);
-        if (user != null) {
-            List<Friendship> friendship = findFriends(List.of(userId)).get(userId);
-            if (friendship != null) {
-                friendship.forEach(user::addFriend);
-            }
+        List<User> rawUsers = findMany(FIND_BY_ID_QUERY, userId);
+        if (rawUsers.isEmpty()) {
+            return null;
         }
-        return user;
+        return groupValues(rawUsers).getFirst();
     }
 
     @Override
@@ -122,28 +118,38 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
         return delete(DELETE_FRIEND_QUERY, userId, friendId);
     }
 
-    public Map<Integer, List<Friendship>> findFriends(List<Integer> userIds) {
+    @Override
+    public List<User> getUserFriends(int userId) {
+        List<User> rawFriends = findMany(FIND_USER_FRIENDS_QUERY, userId);
+        if (rawFriends.isEmpty()) {
+            return rawFriends;
+        }
+        return groupValues(rawFriends);
+    }
+
+    private List<User> groupValues(List<User> rawUsers) {
+        Map<Integer, User> users = new HashMap<>();
+        for (User user : rawUsers) {
+            users.compute(user.getId(), (id, usr) -> {
+                if (usr == null) {
+                    return user;
+                }
+                for (Friendship friendship : user.getFriends().values()) {
+                    usr.addFriend(friendship);
+                }
+                return usr;
+            });
+        }
+        return users.values().stream().toList();
+    }
+
+    @Override
+    public List<User> findUsersByIds(List<Integer> userIds) {
         if (userIds == null || userIds.isEmpty()) {
             log.warn("В метод не переданы id пользователей");
             throw new IllegalArgumentException("В метод не переданы id пользователей");
         }
-        NamedParameterJdbcTemplate namedJdbc = new NamedParameterJdbcTemplate(jdbc);
-        Map<String, List<Integer>> paramMap = Collections.singletonMap("ids", userIds);
 
-        return namedJdbc.query(FIND_ALL_USERS_FRIENDS_QUERY, paramMap, (ResultSet rs) -> {
-            try {
-                Map<Integer, List<Friendship>> results = new HashMap<>();
-                while (rs.next()) {
-                    int userId = rs.getInt("user_id");
-                    int friendId = rs.getInt("friend_id");
-                    FriendshipStatus status = FriendshipStatus.valueOf(rs.getString("status"));
-                    results.computeIfAbsent(userId, k -> new ArrayList<>()).add(new Friendship(friendId, status));
-                }
-                return results;
-            } catch (IllegalArgumentException e) {
-                log.error("Ошибка получения данных из БД. {}", String.valueOf(e));
-                throw new InternalServerException("Не удалось получить данные");
-            }
-        });
+        return findManyByParamList(FIND_USERS_BY_IDS_QUERY, userIds, mapper);
     }
 }

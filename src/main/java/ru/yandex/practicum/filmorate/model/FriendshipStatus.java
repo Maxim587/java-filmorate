@@ -1,5 +1,8 @@
 package ru.yandex.practicum.filmorate.model;
 
+import lombok.Getter;
+
+@Getter
 public enum FriendshipStatus {
     CONFIRMED(1),
     NOT_CONFIRMED(2);
@@ -18,7 +21,4 @@ public enum FriendshipStatus {
         throw new IllegalArgumentException("Некорректное значение id");
     }
 
-    public int getId() {
-        return id;
-    }
 }

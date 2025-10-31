@@ -18,4 +18,8 @@ public interface UserStorage {
     void updateFriendshipStatus(int userId, int friendId, int friendshipStatusId);
 
     boolean deleteFriend(int userId, int friendId);
+
+    List<User> getUserFriends(int userId);
+
+    List<User> findUsersByIds(List<Integer> userIds);
 }

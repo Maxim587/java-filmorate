@@ -13,17 +13,20 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.database.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.database.UserDbStorage;
 import ru.yandex.practicum.filmorate.storage.database.mapper.FilmRowMapper;
+import ru.yandex.practicum.filmorate.storage.database.mapper.GenreRowMapper;
+import ru.yandex.practicum.filmorate.storage.database.mapper.MpaRowMapper;
 import ru.yandex.practicum.filmorate.storage.database.mapper.UserRowMapper;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @JdbcTest
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-@Import({FilmDbStorage.class, UserDbStorage.class, UserRowMapper.class, FilmRowMapper.class})
+@Import({FilmDbStorage.class, UserDbStorage.class, UserRowMapper.class, FilmRowMapper.class, GenreRowMapper.class, MpaRowMapper.class})
 public class FilmIntegrationTests {
     private final FilmDbStorage filmDbStorage;
     private final UserDbStorage userDbStorage;
@@ -141,7 +144,7 @@ public class FilmIntegrationTests {
         film.setDuration(120);
         film.setReleaseDate(LocalDate.of(2025, 11, 11));
         film.setMpa(new Mpa(1, "G"));
-        film.setGenres(List.of(new Genre(1, "Комедия")));
+        film.setGenres(Set.of(new Genre(1, "Комедия")));
 
         Film film2 = new Film();
         film2.setName("name2");
@@ -149,7 +152,7 @@ public class FilmIntegrationTests {
         film2.setDuration(100);
         film2.setReleaseDate(LocalDate.of(2025, 1, 11));
         film2.setMpa(new Mpa(2, "PG"));
-        film2.setGenres(List.of(new Genre(2, "Драма")));
+        film2.setGenres(Set.of(new Genre(2, "Драма")));
 
         return List.of(film, film2);
     }

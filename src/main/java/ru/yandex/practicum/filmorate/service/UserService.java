@@ -15,6 +15,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,7 +32,11 @@ public class UserService {
     }
 
     public List<UserDto> getAllUsers() {
-        return userStorage.getAllUsers().stream()
+        List<User> users = userStorage.getAllUsers();
+        if (users.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return users.stream()
                 .map(UserMapper::mapToUserDto)
                 .toList();
     }
@@ -39,7 +44,10 @@ public class UserService {
     public UserDto getUserById(int id) {
         return Optional.ofNullable(userStorage.getUserById(id))
                 .map(UserMapper::mapToUserDto)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id:" + id + " не найден"));
+                .orElseThrow(() -> {
+                    log.info("Error while getting user by id. User not found id: {}", id);
+                    return new NotFoundException("Пользователь с id:" + id + " не найден");
+                });
     }
 
     public UserDto updateUser(UpdateUserDto updateUserDto) {
@@ -85,16 +93,13 @@ public class UserService {
     }
 
     public Collection<UserDto> getUserFriends(int userId) {
-        User user = userStorage.getUserById(userId);
-        if (user == null) {
-            throw new NotFoundException("Ошибка получения списка друзей. Пользователь с id = " + userId + " не найден");
-        }
-        return user.getFriendsIds().stream()
-                .map(userStorage::getUserById)
+        Optional.ofNullable(userStorage.getUserById(userId)).orElseThrow(() ->
+                new NotFoundException("Ошибка получения списка друзей. Пользователь с id = " + userId + " не найден"));
+
+        return userStorage.getUserFriends(userId).stream()
                 .map(UserMapper::mapToUserDto)
                 .toList();
     }
-
 
     public boolean deleteFriend(int userId, int friendId) {
         User user = userStorage.getUserById(userId);
@@ -131,9 +136,15 @@ public class UserService {
             throw new NotFoundException("Ошибка получения общих друзей. Пользователь id:" + userId2 + " не найден");
         }
 
-        return user1.getFriendsIds().stream()
+        List<Integer> commonFriendsIds = user1.getFriendsIds().stream()
                 .filter(user2.getFriendsIds()::contains)
-                .map(userStorage::getUserById)
+                .toList();
+
+        if (commonFriendsIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return userStorage.findUsersByIds(commonFriendsIds).stream()
                 .map(UserMapper::mapToUserDto)
                 .toList();
     }

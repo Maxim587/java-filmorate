@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage.database.mapper;
 
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.sql.ResultSet;
@@ -18,6 +19,10 @@ public class UserRowMapper implements RowMapper<User> {
         user.setLogin(resultSet.getString("login"));
         user.setName(resultSet.getString("name"));
         user.setBirthday(resultSet.getDate("birthday").toLocalDate());
+        int friendId = resultSet.getInt("friend_id");
+        if (friendId != 0) {
+            user.addFriend(new Friendship(friendId, resultSet.getString("status")));
+        }
 
         return user;
     }

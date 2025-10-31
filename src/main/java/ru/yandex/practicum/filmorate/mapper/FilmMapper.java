@@ -6,10 +6,6 @@ import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.dto.film.NewFilmDto;
 import ru.yandex.practicum.filmorate.dto.film.UpdateFilmDto;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
-
-import java.util.List;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FilmMapper {
@@ -27,14 +23,12 @@ public class FilmMapper {
         return filmDto;
     }
 
-    public static Film mapToFilm(NewFilmDto newFilmDto, Mpa mpa, List<Genre> genres) {
+    public static Film mapToFilm(NewFilmDto newFilmDto) {
         Film film = new Film();
         film.setName(newFilmDto.getName());
         film.setDescription(newFilmDto.getDescription());
         film.setReleaseDate(newFilmDto.getReleaseDate());
         film.setDuration(newFilmDto.getDuration());
-        film.setMpa(mpa);
-        film.setGenres(genres);
 
         return film;
     }
