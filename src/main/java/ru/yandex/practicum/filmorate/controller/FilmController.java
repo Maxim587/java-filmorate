@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.dto.film.NewFilmDto;
@@ -64,4 +65,11 @@ public class FilmController {
     public void deleteLike(@PathVariable int id, @PathVariable int userId) {
         filmService.deleteLike(id, userId);
     }
+
+    @DeleteMapping("/{filmId}")
+    public ResponseEntity<Void> deleteFilm(@PathVariable int filmId) {
+        filmService.deleteFilmById(filmId);
+        return ResponseEntity.noContent().build();
+    }
+
 }

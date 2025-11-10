@@ -148,4 +148,13 @@ public class UserService {
                 .map(UserMapper::mapToUserDto)
                 .toList();
     }
+
+    public void deleteUserById(int userId) {
+        User user = userStorage.getUserById(userId);
+        if (user == null) {
+            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
+        }
+        userStorage.deleteUserById(userId);
+    }
+
 }

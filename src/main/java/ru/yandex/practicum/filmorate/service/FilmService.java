@@ -166,4 +166,13 @@ public class FilmService {
                 .sorted(Comparator.comparing(Genre::getId))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
+
+    public void deleteFilmById(int filmId) {
+        Film film = filmStorage.getFilmById(filmId);
+        if (film == null) {
+            throw new NotFoundException("Фильм с id=" + filmId + " не найден");
+        }
+        filmStorage.deleteFilmById(filmId);
+    }
+
 }

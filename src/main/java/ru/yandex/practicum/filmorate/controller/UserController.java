@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.user.NewUserDto;
 import ru.yandex.practicum.filmorate.dto.user.UpdateUserDto;
@@ -70,4 +71,11 @@ public class UserController {
         log.info("Start getting common friends for user id = {} and user id = {}", id, otherId);
         return userService.getCommonFriends(id, otherId);
     }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<Void> deleteUser(@PathVariable int userId) {
+        userService.deleteUserById(userId);
+        return ResponseEntity.noContent().build();
+    }
+
 }

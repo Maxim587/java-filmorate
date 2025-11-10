@@ -68,6 +68,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "DELETE FROM FILM_LIKE where film_id = ? AND user_id = ?";
     private static final String ADD_MULTIPLE_GENRES_QUERY =
             "INSERT INTO FILM_GENRE(film_id, genre_id) VALUES (?, ?)";
+    private static final String DELETE_FILM_QUERY =
+            "DELETE FROM FILM WHERE film_id = ?";
     private final RowMapper<Genre> genreRowMapper;
     private final RowMapper<Mpa> mpaRowMapper;
 
@@ -197,6 +199,11 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         return groupValues(rawFilms).stream()
                 .sorted(Comparator.comparing(Film::getLikesCount).reversed())
                 .toList();
+    }
+
+    @Override
+    public void deleteFilmById(int filmId) {
+        delete(DELETE_FILM_QUERY, filmId);
     }
 
     private List<Film> groupValues(List<Film> rawFilms) {
