@@ -38,6 +38,19 @@ public class FilmController {
         return filmService.getMostPopular(count);
     }
 
+    @GetMapping("/search")
+    public List<FilmDto> searchFilms(@RequestParam String query, @RequestParam String by) {
+        log.info("Start searching films with query: {}, by: {}", query, by);
+        return filmService.searchFilms(query, by);
+    }
+
+    @GetMapping("/director/{directorId}")
+    public List<FilmDto> getFilmsByDirector(@PathVariable int directorId,
+                                            @RequestParam(defaultValue = "year") String sortBy) {
+        log.info("Start getting films by director id: {}, sort by: {}", directorId, sortBy);
+        return filmService.getFilmsByDirector(directorId, sortBy);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public FilmDto create(@Valid @RequestBody NewFilmDto newFilmDto) {

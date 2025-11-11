@@ -19,6 +19,15 @@ import java.util.Map;
 @Repository
 public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
+    private final JdbcTemplate jdbc;
+    private final RowMapper<User> userRowMapper;
+
+    public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> userRowMapper) {
+        super(jdbc, userRowMapper);
+        this.jdbc = jdbc;
+        this.userRowMapper = userRowMapper;
+    }
+
     private static final String FIND_ALL_QUERY =
             "SELECT u.USER_ID, u.EMAIL, u.LOGIN, u.NAME, u.BIRTHDAY, f.FRIEND_ID, fs.STATUS " +
                     "FROM USERS u " +
@@ -54,10 +63,6 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
             "LEFT JOIN FRIENDSHIP f2 ON u.USER_ID = f2.USER_ID left JOIN FRIENDSHIP_STATUS fs ON f2.FRIENDSHIP_STATUS_ID = fs.FRIENDSHIP_STATUS_ID " +
             "WHERE f1.USER_ID = ? " +
             "ORDER BY u.USER_ID";
-
-    public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
-        super(jdbc, mapper);
-    }
 
     @Override
     public User createUser(User user) {
@@ -127,6 +132,16 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
         return groupValues(rawFriends);
     }
 
+    @Override
+    public List<User> findUsersByIds(List<Integer> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            log.warn("В метод не переданы id пользователей");
+            throw new IllegalArgumentException("В метод не переданы id пользователей");
+        }
+
+        return findManyByParamList(FIND_USERS_BY_IDS_QUERY, userIds, userRowMapper);
+    }
+
     private List<User> groupValues(List<User> rawUsers) {
         Map<Integer, User> users = new HashMap<>();
         for (User user : rawUsers) {
@@ -141,15 +156,5 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
             });
         }
         return users.values().stream().toList();
-    }
-
-    @Override
-    public List<User> findUsersByIds(List<Integer> userIds) {
-        if (userIds == null || userIds.isEmpty()) {
-            log.warn("В метод не переданы id пользователей");
-            throw new IllegalArgumentException("В метод не переданы id пользователей");
-        }
-
-        return findManyByParamList(FIND_USERS_BY_IDS_QUERY, userIds, mapper);
     }
 }

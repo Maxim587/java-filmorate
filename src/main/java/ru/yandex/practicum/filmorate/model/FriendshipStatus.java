@@ -6,6 +6,7 @@ import lombok.Getter;
 public enum FriendshipStatus {
     CONFIRMED(1),
     NOT_CONFIRMED(2);
+
     private final int id;
 
     FriendshipStatus(int id) {
@@ -20,5 +21,4 @@ public enum FriendshipStatus {
         }
         throw new IllegalArgumentException("Некорректное значение id");
     }
-
 }

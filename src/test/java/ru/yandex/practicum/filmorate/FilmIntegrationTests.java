@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate;
 
-import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -25,11 +24,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @JdbcTest
 @AutoConfigureTestDatabase
-@RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Import({FilmDbStorage.class, UserDbStorage.class, UserRowMapper.class, FilmRowMapper.class, GenreRowMapper.class, MpaRowMapper.class})
 public class FilmIntegrationTests {
-    private final FilmDbStorage filmDbStorage;
-    private final UserDbStorage userDbStorage;
+
+    @Autowired
+    private FilmDbStorage filmDbStorage;
+
+    @Autowired
+    private UserDbStorage userDbStorage;
 
     @Test
     public void createFilm() {
@@ -100,7 +102,7 @@ public class FilmIntegrationTests {
 
     @Test
     public void getMostPopularFilm() {
-
+        // Создаем фильмы
         Film film1 = filmDbStorage.createFilm(prepareFilms().getFirst());
         Film film2 = filmDbStorage.createFilm(prepareFilms().getLast());
         Film film3 = filmDbStorage.createFilm(prepareFilms().getFirst());
@@ -108,6 +110,7 @@ public class FilmIntegrationTests {
         Film film5 = filmDbStorage.createFilm(prepareFilms().getFirst());
         Film film6 = filmDbStorage.createFilm(prepareFilms().getLast());
 
+        // Создаем пользователей
         User user1 = userDbStorage.createUser(prepareUser());
         User user2 = userDbStorage.createUser(prepareUser());
         User user3 = userDbStorage.createUser(prepareUser());
@@ -116,25 +119,41 @@ public class FilmIntegrationTests {
         User user6 = userDbStorage.createUser(prepareUser());
         User user7 = userDbStorage.createUser(prepareUser());
 
+        // Распределяем лайки так, чтобы film6 был самым популярным (4 лайка)
         filmDbStorage.addLike(film6.getId(), user1.getId());
         filmDbStorage.addLike(film6.getId(), user2.getId());
         filmDbStorage.addLike(film6.getId(), user3.getId());
         filmDbStorage.addLike(film6.getId(), user4.getId());
 
+        // film3 - второй по популярности (3 лайка)
         filmDbStorage.addLike(film3.getId(), user5.getId());
         filmDbStorage.addLike(film3.getId(), user6.getId());
         filmDbStorage.addLike(film3.getId(), user7.getId());
 
+        // film1 - третий по популярности (2 лайка)
         filmDbStorage.addLike(film1.getId(), user5.getId());
         filmDbStorage.addLike(film1.getId(), user6.getId());
 
+        // film2 - четвертый по популярности (1 лайк)
         filmDbStorage.addLike(film2.getId(), user3.getId());
 
+        // Получаем топ-3 популярных фильма
         List<Film> top = filmDbStorage.getMostPopular(3);
         assertThat(top).hasSize(3);
-        assertThat(top.getFirst().getId()).isEqualTo(film6.getId());
+
+        // Проверяем, что фильмы отсортированы по убыванию количества лайков
+        // Собираем ID фильмов в топе для отладки
+        List<Integer> topFilmIds = top.stream().map(Film::getId).toList();
+
+        // Проверяем, что film6 (4 лайка) на первом месте
+        assertThat(top.get(0).getId()).isEqualTo(film6.getId());
+        // Проверяем, что film3 (3 лайка) на втором месте
         assertThat(top.get(1).getId()).isEqualTo(film3.getId());
-        assertThat(top.getLast().getId()).isEqualTo(film1.getId());
+        // Проверяем, что film1 (2 лайка) на третьем месте
+        assertThat(top.get(2).getId()).isEqualTo(film1.getId());
+
+        // Дополнительная проверка: film2 (1 лайк) не должен быть в топ-3
+        assertThat(topFilmIds).doesNotContain(film2.getId());
     }
 
     private List<Film> prepareFilms() {

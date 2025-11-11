@@ -30,4 +30,8 @@ public interface FilmStorage {
     void deleteLike(int filmId, int userId);
 
     List<Film> getMostPopular(int count);
+
+    List<Film> searchFilms(String query, String by);
+
+    List<Film> getFilmsByDirector(int directorId, String sortBy);
 }

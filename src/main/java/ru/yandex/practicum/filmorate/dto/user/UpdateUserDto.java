@@ -7,7 +7,6 @@ import java.time.LocalDate;
 
 @Data
 public class UpdateUserDto {
-
     @NotNull
     @Max(Integer.MAX_VALUE)
     @Positive(message = "Значение должно быть целым положительным числом")

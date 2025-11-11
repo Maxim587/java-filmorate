@@ -7,7 +7,6 @@ import java.time.LocalDate;
 
 @Data
 public class NewUserDto {
-
     @NotBlank(message = "Значение не должно быть пустым")
     @Email(message = "Значение должно соответствовать формату email")
     private String email;

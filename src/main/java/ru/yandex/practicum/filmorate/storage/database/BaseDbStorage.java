@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.storage.database;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -13,10 +12,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-@RequiredArgsConstructor
-abstract class BaseDbStorage<T> {
+public abstract class BaseDbStorage<T> {
     protected final JdbcTemplate jdbc;
     protected final RowMapper<T> mapper;
+
+    public BaseDbStorage(JdbcTemplate jdbc, RowMapper<T> mapper) {
+        this.jdbc = jdbc;
+        this.mapper = mapper;
+    }
 
     protected List<T> findMany(String query, Object... params) {
         return jdbc.query(query, mapper, params);
