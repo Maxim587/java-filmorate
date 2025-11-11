@@ -45,7 +45,7 @@ public class GenreTests {
         assertThat(genres)
                 .isNotEmpty();
 
-        assertThat(genres.getFirst())
+        assertThat(genres.get(0))
                 .hasFieldOrPropertyWithValue("id", 1)
                 .hasFieldOrProperty("name");
     }

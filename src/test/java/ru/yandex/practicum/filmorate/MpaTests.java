@@ -48,7 +48,7 @@ public class MpaTests {
                 .isNotEmpty()
                 .hasSize(5);
 
-        assertThat(mpas.getFirst())
+        assertThat(mpas.get(0))
                 .hasFieldOrPropertyWithValue("id", 1)
                 .hasFieldOrPropertyWithValue("name", "G");
     }

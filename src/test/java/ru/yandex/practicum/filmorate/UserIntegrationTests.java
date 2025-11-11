@@ -47,7 +47,7 @@ public class UserIntegrationTests {
         List<User> users = userDbStorage.getAllUsers();
         assertThat(users).hasSize(2);
 
-        User checkUser = users.getFirst();
+        User checkUser = users.get(0);
         assertThat(checkUser.getId()).isEqualTo(user.getId());
         assertThat(checkUser.getEmail()).isEqualTo(user.getEmail());
         assertThat(checkUser.getLogin()).isEqualTo(user.getLogin());

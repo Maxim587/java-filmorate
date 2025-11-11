@@ -33,7 +33,7 @@ public class FilmIntegrationTests {
 
     @Test
     public void createFilm() {
-        Film film = filmDbStorage.createFilm(prepareFilms().getFirst());
+        Film film = filmDbStorage.createFilm(prepareFilms().get(0));
 
         Film dbFilm = filmDbStorage.getFilmById(film.getId());
         assertThat(dbFilm).isNotNull();
@@ -49,13 +49,13 @@ public class FilmIntegrationTests {
     public void getAllFilms() {
         List<Film> preparedFilms = prepareFilms();
 
-        Film film1 = filmDbStorage.createFilm(preparedFilms.getFirst());
-        Film film2 = filmDbStorage.createFilm(preparedFilms.getLast());
+        Film film1 = filmDbStorage.createFilm(preparedFilms.get(0));
+        Film film2 = filmDbStorage.createFilm(preparedFilms.get(preparedFilms.size() - 1));
 
         List<Film> films = filmDbStorage.getAllFilms();
         assertThat(films).hasSize(2);
 
-        Film film = films.getFirst();
+        Film film = films.get(0);
         assertThat(film.getId()).isEqualTo(film1.getId());
         assertThat(film.getName()).isEqualTo("name");
         assertThat(film.getDescription()).isEqualTo("description");
@@ -67,8 +67,8 @@ public class FilmIntegrationTests {
     @Test
     public void updateFilm() {
         List<Film> preparedFilms = prepareFilms();
-        Film oldFilm = filmDbStorage.createFilm(preparedFilms.getFirst());
-        Film newFilm = preparedFilms.getLast();
+        Film oldFilm = filmDbStorage.createFilm(preparedFilms.get(0));
+        Film newFilm = preparedFilms.get(preparedFilms.size() - 1);
         newFilm.setId(oldFilm.getId());
         filmDbStorage.updateFilm(newFilm);
 
@@ -85,7 +85,7 @@ public class FilmIntegrationTests {
     public void filmLikes() {
         User user = prepareUser();
         User dbUser = userDbStorage.createUser(user);
-        Film dbFilm = filmDbStorage.createFilm(prepareFilms().getFirst());
+        Film dbFilm = filmDbStorage.createFilm(prepareFilms().get(0));
 
         filmDbStorage.addLike(dbFilm.getId(), dbUser.getId());
 
@@ -101,12 +101,12 @@ public class FilmIntegrationTests {
     @Test
     public void getMostPopularFilm() {
 
-        Film film1 = filmDbStorage.createFilm(prepareFilms().getFirst());
-        Film film2 = filmDbStorage.createFilm(prepareFilms().getLast());
-        Film film3 = filmDbStorage.createFilm(prepareFilms().getFirst());
-        Film film4 = filmDbStorage.createFilm(prepareFilms().getLast());
-        Film film5 = filmDbStorage.createFilm(prepareFilms().getFirst());
-        Film film6 = filmDbStorage.createFilm(prepareFilms().getLast());
+        Film film1 = filmDbStorage.createFilm(prepareFilms().get(0));
+        Film film2 = filmDbStorage.createFilm(prepareFilms().get(prepareFilms().size() - 1));
+        Film film3 = filmDbStorage.createFilm(prepareFilms().get(0));
+        Film film4 = filmDbStorage.createFilm(prepareFilms().get(prepareFilms().size() - 1));
+        Film film5 = filmDbStorage.createFilm(prepareFilms().get(0));
+        Film film6 = filmDbStorage.createFilm(prepareFilms().get(prepareFilms().size() - 1));
 
         User user1 = userDbStorage.createUser(prepareUser());
         User user2 = userDbStorage.createUser(prepareUser());
@@ -132,9 +132,9 @@ public class FilmIntegrationTests {
 
         List<Film> top = filmDbStorage.getMostPopular(3);
         assertThat(top).hasSize(3);
-        assertThat(top.getFirst().getId()).isEqualTo(film6.getId());
+        assertThat(top.get(0).getId()).isEqualTo(film6.getId());
         assertThat(top.get(1).getId()).isEqualTo(film3.getId());
-        assertThat(top.getLast().getId()).isEqualTo(film1.getId());
+        assertThat(top.get(top.size() - 1).getId()).isEqualTo(film1.getId());
     }
 
     private List<Film> prepareFilms() {
