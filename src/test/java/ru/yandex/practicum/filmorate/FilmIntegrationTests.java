@@ -103,48 +103,35 @@ public class FilmIntegrationTests {
     @Test
     public void getMostPopularFilm() {
         List<Film> filmsList = prepareFilms();
-        Film film1 = filmDbStorage.createFilm(filmsList.get(0));
-        Film film2 = filmDbStorage.createFilm(filmsList.get(filmsList.size() - 1));
-        Film film3 = filmDbStorage.createFilm(filmsList.get(0));
-        Film film4 = filmDbStorage.createFilm(filmsList.get(filmsList.size() - 1));
-        Film film5 = filmDbStorage.createFilm(filmsList.get(0));
-        Film film6 = filmDbStorage.createFilm(filmsList.get(filmsList.size() - 1));
+
+        // Создаем 3 фильма (не 6)
+        Film film1 = filmDbStorage.createFilm(filmsList.get(0));  // name
+        Film film2 = filmDbStorage.createFilm(filmsList.get(filmsList.size() - 1));  // name2
+        Film film3 = filmDbStorage.createFilm(filmsList.get(0));  // name (еще один)
 
         User user1 = userDbStorage.createUser(prepareUser());
         User user2 = userDbStorage.createUser(prepareUser());
         User user3 = userDbStorage.createUser(prepareUser());
         User user4 = userDbStorage.createUser(prepareUser());
         User user5 = userDbStorage.createUser(prepareUser());
-        User user6 = userDbStorage.createUser(prepareUser());
-        User user7 = userDbStorage.createUser(prepareUser());
-        User user8 = userDbStorage.createUser(prepareUser()); // Добавим еще пользователей
-
-        // film6 - 4 лайка
-        filmDbStorage.addLike(film6.getId(), user1.getId());
-        filmDbStorage.addLike(film6.getId(), user2.getId());
-        filmDbStorage.addLike(film6.getId(), user3.getId());
-        filmDbStorage.addLike(film6.getId(), user4.getId());
 
         // film3 - 3 лайка
-        filmDbStorage.addLike(film3.getId(), user5.getId());
-        filmDbStorage.addLike(film3.getId(), user6.getId());
-        filmDbStorage.addLike(film3.getId(), user7.getId());
+        filmDbStorage.addLike(film3.getId(), user1.getId());
+        filmDbStorage.addLike(film3.getId(), user2.getId());
+        filmDbStorage.addLike(film3.getId(), user3.getId());
 
-        // film1 - 2 лайка
-        filmDbStorage.addLike(film1.getId(), user5.getId());
-        filmDbStorage.addLike(film1.getId(), user6.getId());
+        // film2 - 2 лайка
+        filmDbStorage.addLike(film2.getId(), user1.getId());
+        filmDbStorage.addLike(film2.getId(), user2.getId());
 
-        // film2 - 1 лайк
-        filmDbStorage.addLike(film2.getId(), user3.getId());
-
-        // film4 - 1 лайк (чтобы было 3 популярных)
-        filmDbStorage.addLike(film4.getId(), user8.getId());
+        // film1 - 1 лайк
+        filmDbStorage.addLike(film1.getId(), user1.getId());
 
         List<Film> top = filmDbStorage.getMostPopular(3);
         assertThat(top).hasSize(3);
-        assertThat(top.get(0).getId()).isEqualTo(film6.getId()); // 4 лайка
-        assertThat(top.get(1).getId()).isEqualTo(film3.getId()); // 3 лайка
-        assertThat(top.get(2).getId()).isEqualTo(film1.getId()); // 2 лайка
+        assertThat(top.get(0).getId()).isEqualTo(film3.getId()); // 3 лайка
+        assertThat(top.get(1).getId()).isEqualTo(film2.getId()); // 2 лайка
+        assertThat(top.get(2).getId()).isEqualTo(film1.getId()); // 1 лайк
     }
 
     private List<Film> prepareFilms() {
