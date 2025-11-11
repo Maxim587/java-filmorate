@@ -26,7 +26,6 @@ public class GenreTests {
 
     @Test
     public void testGetGenreById() {
-
         Optional<Genre> genreOpt = Optional.of(filmDbStorage.getGenreById(1));
 
         assertThat(genreOpt)
@@ -39,7 +38,6 @@ public class GenreTests {
 
     @Test
     public void testGetAllGenres() {
-
         List<Genre> genres = filmDbStorage.getAllGenres();
 
         assertThat(genres)

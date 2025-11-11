@@ -40,7 +40,6 @@ public class UserIntegrationTests {
 
     @Test
     public void getAllUsers() {
-
         User user = userDbStorage.createUser(getUser());
         User user2 = userDbStorage.createUser(getUser());
 
@@ -73,7 +72,6 @@ public class UserIntegrationTests {
         assertThat(updatedUserFromDb.getLogin()).isEqualTo(newUser.getLogin());
         assertThat(updatedUserFromDb.getName()).isEqualTo(newUser.getName());
         assertThat(updatedUserFromDb.getBirthday()).isEqualTo(newUser.getBirthday());
-
     }
 
     @Test
@@ -81,21 +79,21 @@ public class UserIntegrationTests {
         User user1 = userDbStorage.createUser(getUser());
         User user2 = userDbStorage.createUser(getUser());
 
-        //добавление в друзья
+        // добавление в друзья
         userDbStorage.addFriend(user1.getId(), user2.getId(), 2);
         Map<Integer, Friendship> user1Friends = userDbStorage.getUserById(user1.getId()).getFriends();
         assertThat(user1Friends).hasSize(1);
         Friendship user1AndUser2Friendship = user1Friends.get(user2.getId());
-        assertThat(user1AndUser2Friendship).isNotNull(); //сущность Дружба != null
-        assertThat(user1AndUser2Friendship.getFriendId()).isEqualTo(user2.getId()); //в сущности Дружба нужный userId
-        assertThat(user1AndUser2Friendship.getStatus()).isEqualTo(FriendshipStatus.NOT_CONFIRMED.toString()); //в сущности Дружба нужный статус
-        assertThat(userDbStorage.getUserById(user2.getId()).getFriends()).isEmpty(); //у второго пользователя не должен появится в друзьях user1
+        assertThat(user1AndUser2Friendship).isNotNull();
+        assertThat(user1AndUser2Friendship.getFriendId()).isEqualTo(user2.getId());
+        assertThat(user1AndUser2Friendship.getStatus()).isEqualTo(FriendshipStatus.NOT_CONFIRMED.toString());
+        assertThat(userDbStorage.getUserById(user2.getId()).getFriends()).isEmpty();
 
-        //изменение статуса дружбы
+        // изменение статуса дружбы
         userDbStorage.addFriend(user1.getId(), user2.getId(), 1);
         assertThat(userDbStorage.getUserById(user1.getId()).getFriends().get(user2.getId()).getStatus()).isEqualTo(FriendshipStatus.CONFIRMED.toString());
 
-        //удаление
+        // удаление
         userDbStorage.deleteFriend(user1.getId(), user2.getId());
         assertThat(userDbStorage.getUserById(user1.getId()).getFriends()).isEmpty();
     }

@@ -33,7 +33,8 @@ public class FilmIntegrationTests {
 
     @Test
     public void createFilm() {
-        Film film = filmDbStorage.createFilm(prepareFilms().get(0));
+        List<Film> films = prepareFilms();
+        Film film = filmDbStorage.createFilm(films.get(0));
 
         Film dbFilm = filmDbStorage.getFilmById(film.getId());
         assertThat(dbFilm).isNotNull();
@@ -85,7 +86,8 @@ public class FilmIntegrationTests {
     public void filmLikes() {
         User user = prepareUser();
         User dbUser = userDbStorage.createUser(user);
-        Film dbFilm = filmDbStorage.createFilm(prepareFilms().get(0));
+        List<Film> films = prepareFilms();
+        Film dbFilm = filmDbStorage.createFilm(films.get(0));
 
         filmDbStorage.addLike(dbFilm.getId(), dbUser.getId());
 
@@ -100,13 +102,13 @@ public class FilmIntegrationTests {
 
     @Test
     public void getMostPopularFilm() {
-
-        Film film1 = filmDbStorage.createFilm(prepareFilms().get(0));
-        Film film2 = filmDbStorage.createFilm(prepareFilms().get(prepareFilms().size() - 1));
-        Film film3 = filmDbStorage.createFilm(prepareFilms().get(0));
-        Film film4 = filmDbStorage.createFilm(prepareFilms().get(prepareFilms().size() - 1));
-        Film film5 = filmDbStorage.createFilm(prepareFilms().get(0));
-        Film film6 = filmDbStorage.createFilm(prepareFilms().get(prepareFilms().size() - 1));
+        List<Film> filmsList = prepareFilms();
+        Film film1 = filmDbStorage.createFilm(filmsList.get(0));
+        Film film2 = filmDbStorage.createFilm(filmsList.get(filmsList.size() - 1));
+        Film film3 = filmDbStorage.createFilm(filmsList.get(0));
+        Film film4 = filmDbStorage.createFilm(filmsList.get(filmsList.size() - 1));
+        Film film5 = filmDbStorage.createFilm(filmsList.get(0));
+        Film film6 = filmDbStorage.createFilm(filmsList.get(filmsList.size() - 1));
 
         User user1 = userDbStorage.createUser(prepareUser());
         User user2 = userDbStorage.createUser(prepareUser());

@@ -29,7 +29,6 @@ public class MpaTests {
 
     @Test
     public void testGetMpaById() {
-
         Optional<Mpa> mpaOpt = Optional.of(filmDbStorage.getRatingById(1));
 
         assertThat(mpaOpt)
@@ -41,7 +40,6 @@ public class MpaTests {
 
     @Test
     public void testGetAllMpas() {
-
         List<Mpa> mpas = filmDbStorage.getRatings();
 
         assertThat(mpas)
