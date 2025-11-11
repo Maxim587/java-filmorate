@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.Director;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -21,13 +22,23 @@ public class FilmRowMapper implements RowMapper<Film> {
         film.setReleaseDate(rs.getDate("release_date").toLocalDate());
         film.setDuration(rs.getInt("duration"));
         film.setMpa(new Mpa(rs.getInt("rating_id"), rs.getString("rating_name")));
+
+        // Обрабатываем жанр
         int genreId = rs.getInt("genre_id");
         if (genreId != 0) {
             film.getGenres().add(new Genre(rs.getInt("genre_id"), rs.getString("genre")));
         }
+
+        // Обрабатываем лайк
         int like = rs.getInt("like");
         if (like != 0) {
             film.getLikes().add(like);
+        }
+
+        // Обрабатываем режиссера
+        int directorId = rs.getInt("director_id");
+        if (directorId != 0) {
+            film.getDirectors().add(new Director(directorId, rs.getString("director_name")));
         }
 
         return film;

@@ -1,0 +1,1124 @@
+diff --git a/pom.xml b/pom.xml
+index 68f37e0..1a6861b 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -1,66 +1,66 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+-	<modelVersion>4.0.0</modelVersion>
++         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
++    <modelVersion>4.0.0</modelVersion>
+ 
+-	<parent>
+-		<groupId>org.springframework.boot</groupId>
+-		<artifactId>spring-boot-starter-parent</artifactId>
+-		<version>3.2.4</version>
+-		<relativePath/> <!-- lookup parent from repository -->
+-	</parent>
++    <parent>
++        <groupId>org.springframework.boot</groupId>
++        <artifactId>spring-boot-starter-parent</artifactId>
++        <version>3.2.4</version>
++        <relativePath/> <!-- lookup parent from repository -->
++    </parent>
+ 
+-	<groupId>ru.yandex.practicum</groupId>
+-	<artifactId>filmorate</artifactId>
+-	<version>0.0.1-SNAPSHOT</version>
+-	<name>filmorate</name>
+-	<description>filmorate</description>
++    <groupId>ru.yandex.practicum</groupId>
++    <artifactId>filmorate</artifactId>
++    <version>0.0.1-SNAPSHOT</version>
++    <name>filmorate</name>
++    <description>filmorate</description>
+ 
+-	<properties>
+-		<java.version>21</java.version>
+-	</properties>
++    <properties>
++        <java.version>21</java.version>
++    </properties>
+ 
+-	<dependencies>
+-		<dependency>
+-			<groupId>org.springframework.boot</groupId>
+-			<artifactId>spring-boot-starter-web</artifactId>
+-		</dependency>
+-		<dependency>
+-			<groupId>org.projectlombok</groupId>
+-			<artifactId>lombok</artifactId>
+-			<scope>provided</scope>
+-		</dependency>
+-		<dependency>
+-			<groupId>org.springframework.boot</groupId>
+-			<artifactId>spring-boot-starter-test</artifactId>
+-			<scope>test</scope>
+-		</dependency>
+-		<dependency>
+-			<groupId>org.junit.platform</groupId>
+-			<artifactId>junit-platform-launcher</artifactId>
+-			<scope>test</scope>
+-		</dependency>
+-		<dependency>
+-			<groupId>org.springframework.boot</groupId>
+-			<artifactId>spring-boot-starter-validation</artifactId>
+-		</dependency>
+-		<dependency>
+-			<groupId>org.slf4j</groupId>
+-			<artifactId>slf4j-api</artifactId>
+-		</dependency>
+-		<dependency>
+-			<groupId>ch.qos.logback</groupId>
+-			<artifactId>logback-core</artifactId>
+-		</dependency>
+-		<dependency>
+-			<groupId>ch.qos.logback</groupId>
+-			<artifactId>logback-classic</artifactId>
+-		</dependency>
+-		<dependency>
+-			<groupId>org.zalando</groupId>
+-			<artifactId>logbook-spring-boot-starter</artifactId>
+-			<version>3.7.2</version>
+-		</dependency>
++    <dependencies>
++        <dependency>
++            <groupId>org.springframework.boot</groupId>
++            <artifactId>spring-boot-starter-web</artifactId>
++        </dependency>
++        <dependency>
++            <groupId>org.projectlombok</groupId>
++            <artifactId>lombok</artifactId>
++            <scope>provided</scope>
++        </dependency>
++        <dependency>
++            <groupId>org.springframework.boot</groupId>
++            <artifactId>spring-boot-starter-test</artifactId>
++            <scope>test</scope>
++        </dependency>
++        <dependency>
++            <groupId>org.junit.platform</groupId>
++            <artifactId>junit-platform-launcher</artifactId>
++            <scope>test</scope>
++        </dependency>
++        <dependency>
++            <groupId>org.springframework.boot</groupId>
++            <artifactId>spring-boot-starter-validation</artifactId>
++        </dependency>
++        <dependency>
++            <groupId>org.slf4j</groupId>
++            <artifactId>slf4j-api</artifactId>
++        </dependency>
++        <dependency>
++            <groupId>ch.qos.logback</groupId>
++            <artifactId>logback-core</artifactId>
++        </dependency>
++        <dependency>
++            <groupId>ch.qos.logback</groupId>
++            <artifactId>logback-classic</artifactId>
++        </dependency>
++        <dependency>
++            <groupId>org.zalando</groupId>
++            <artifactId>logbook-spring-boot-starter</artifactId>
++            <version>3.7.2</version>
++        </dependency>
+         <dependency>
+             <groupId>org.springframework.boot</groupId>
+             <artifactId>spring-boot-starter-data-jdbc</artifactId>
+@@ -70,34 +70,58 @@
+             <artifactId>h2</artifactId>
+             <scope>runtime</scope>
+         </dependency>
+-	</dependencies>
++    </dependencies>
+ 
+-	<build>
+-		<plugins>
+-			<plugin>
+-				<groupId>org.springframework.boot</groupId>
+-				<artifactId>spring-boot-maven-plugin</artifactId>
+-			</plugin>
+-			<plugin>
+-				<groupId>org.apache.maven.plugins</groupId>
+-				<artifactId>maven-checkstyle-plugin</artifactId>
+-				<version>3.6.0</version>
+-				<configuration>
+-					<configLocation>checkstyle.xml</configLocation>
+-					<failOnViolation>true</failOnViolation>
+-					<logViolationsToConsole>true</logViolationsToConsole>
+-					<includeTestSourceDirectory>true</includeTestSourceDirectory>
+-				</configuration>
+-				<executions>
+-					<execution>
+-						<goals>
+-							<goal>check</goal>
+-						</goals>
+-						<phase>compile</phase>
+-					</execution>
+-				</executions>
+-			</plugin>
+-		</plugins>
+-	</build>
++    <build>
++        <plugins>
++            <plugin>
++                <groupId>org.springframework.boot</groupId>
++                <artifactId>spring-boot-maven-plugin</artifactId>
++                <configuration>
++                    <excludes>
++                        <exclude>
++                            <groupId>org.projectlombok</groupId>
++                            <artifactId>lombok</artifactId>
++                        </exclude>
++                    </excludes>
++                </configuration>
++            </plugin>
++            <plugin>
++                <groupId>org.apache.maven.plugins</groupId>
++                <artifactId>maven-compiler-plugin</artifactId>
++                <version>3.11.0</version>
++                <configuration>
++                    <source>21</source>
++                    <target>21</target>
++                    <annotationProcessorPaths>
++                        <path>
++                            <groupId>org.projectlombok</groupId>
++                            <artifactId>lombok</artifactId>
++                            <version>1.18.30</version>
++                        </path>
++                    </annotationProcessorPaths>
++                </configuration>
++            </plugin>
++            <plugin>
++                <groupId>org.apache.maven.plugins</groupId>
++                <artifactId>maven-checkstyle-plugin</artifactId>
++                <version>3.6.0</version>
++                <configuration>
++                    <configLocation>checkstyle.xml</configLocation>
++                    <failOnViolation>true</failOnViolation>
++                    <logViolationsToConsole>true</logViolationsToConsole>
++                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
++                </configuration>
++                <executions>
++                    <execution>
++                        <goals>
++                            <goal>check</goal>
++                        </goals>
++                        <phase>compile</phase>
++                    </execution>
++                </executions>
++            </plugin>
++        </plugins>
++    </build>
+ 
+ </project>
+diff --git a/src/main/java/ru/yandex/practicum/filmorate/controller/DirectorController.java b/src/main/java/ru/yandex/practicum/filmorate/controller/DirectorController.java
+new file mode 100644
+index 0000000..3e4a7df
+--- /dev/null
++++ b/src/main/java/ru/yandex/practicum/filmorate/controller/DirectorController.java
+@@ -0,0 +1,59 @@
++package ru.yandex.practicum.filmorate.controller;
++
++import lombok.RequiredArgsConstructor;
++import lombok.extern.slf4j.Slf4j;
++import org.springframework.http.HttpStatus;
++import org.springframework.web.bind.annotation.*;
++import ru.yandex.practicum.filmorate.dto.director.DirectorDto;
++import ru.yandex.practicum.filmorate.dto.film.FilmDto;
++import ru.yandex.practicum.filmorate.service.DirectorService;
++
++import java.util.List;
++
++@Slf4j
++@RestController
++@RequestMapping("/directors")
++@RequiredArgsConstructor
++public class DirectorController {
++
++    private final DirectorService directorService;
++
++    @GetMapping
++    public List<DirectorDto> findAll() {
++        log.info("Start getting all directors");
++        return directorService.getAllDirectors();
++    }
++
++    @GetMapping("/{id}")
++    public DirectorDto findById(@PathVariable int id) {
++        log.info("Start getting director by id {}", id);
++        return directorService.getDirectorById(id);
++    }
++
++    @PostMapping
++    @ResponseStatus(HttpStatus.CREATED)
++    public DirectorDto create(@RequestBody DirectorDto directorDto) {
++        log.info("Start creating director");
++        return directorService.createDirector(directorDto);
++    }
++
++    @PutMapping
++    public DirectorDto update(@RequestBody DirectorDto directorDto) {
++        log.info("Start updating director with id: {}", directorDto.getId());
++        return directorService.updateDirector(directorDto);
++    }
++
++    @DeleteMapping("/{id}")
++    public void delete(@PathVariable int id) {
++        log.info("Start deleting director with id: {}", id);
++        directorService.deleteDirector(id);
++    }
++
++    @GetMapping("/{directorId}/films")
++    public List<FilmDto> getDirectorFilms(
++            @PathVariable int directorId,
++            @RequestParam(defaultValue = "year") String sortBy) {
++        log.info("Start getting films for director id: {}, sorted by: {}", directorId, sortBy);
++        return directorService.getDirectorFilms(directorId, sortBy);
++    }
++}
+diff --git a/src/main/java/ru/yandex/practicum/filmorate/controller/FilmController.java b/src/main/java/ru/yandex/practicum/filmorate/controller/FilmController.java
+index a01d369..25f8a55 100644
+--- a/src/main/java/ru/yandex/practicum/filmorate/controller/FilmController.java
++++ b/src/main/java/ru/yandex/practicum/filmorate/controller/FilmController.java
+@@ -38,6 +38,14 @@ public class FilmController {
+         return filmService.getMostPopular(count);
+     }
+ 
++    @GetMapping("/search")
++    public List<FilmDto> searchFilms(
++            @RequestParam String query,
++            @RequestParam(defaultValue = "title,director") List<String> by) {
++        log.info("Start searching films with query: {}, by: {}", query, by);
++        return filmService.searchFilms(query, by);
++    }
++
+     @PostMapping
+     @ResponseStatus(HttpStatus.CREATED)
+     public FilmDto create(@Valid @RequestBody NewFilmDto newFilmDto) {
+diff --git a/src/main/java/ru/yandex/practicum/filmorate/dto/DirectorRequestDto.java b/src/main/java/ru/yandex/practicum/filmorate/dto/DirectorRequestDto.java
+new file mode 100644
+index 0000000..39c8ea6
+--- /dev/null
++++ b/src/main/java/ru/yandex/practicum/filmorate/dto/DirectorRequestDto.java
+@@ -0,0 +1,10 @@
++package ru.yandex.practicum.filmorate.dto;
++
++import lombok.Data;
++import lombok.EqualsAndHashCode;
++
++@Data
++@EqualsAndHashCode(of = {"id"})
++public class DirectorRequestDto {
++    private int id;
++}
+diff --git a/src/main/java/ru/yandex/practicum/filmorate/dto/director/DirectorDto.java b/src/main/java/ru/yandex/practicum/filmorate/dto/director/DirectorDto.java
+new file mode 100644
+index 0000000..486bdf5
+--- /dev/null
++++ b/src/main/java/ru/yandex/practicum/filmorate/dto/director/DirectorDto.java
+@@ -0,0 +1,9 @@
++package ru.yandex.practicum.filmorate.dto.director;
++
++import lombok.Data;
++
++@Data
++public class DirectorDto {
++    private Integer id;
++    private String name;
++}
+diff --git a/src/main/java/ru/yandex/practicum/filmorate/dto/film/NewFilmDto.java b/src/main/java/ru/yandex/practicum/filmorate/dto/film/NewFilmDto.java
+index e14bfcd..2a44828 100644
+--- a/src/main/java/ru/yandex/practicum/filmorate/dto/film/NewFilmDto.java
++++ b/src/main/java/ru/yandex/practicum/filmorate/dto/film/NewFilmDto.java
+@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
+ import jakarta.validation.constraints.Positive;
+ import jakarta.validation.constraints.Size;
+ import lombok.Data;
++import ru.yandex.practicum.filmorate.dto.DirectorRequestDto;
+ import ru.yandex.practicum.filmorate.dto.GenreRequestDto;
+ import ru.yandex.practicum.filmorate.dto.MpaRequestDto;
+ import ru.yandex.practicum.filmorate.validation.ReleaseDateFrom;
+@@ -30,4 +31,6 @@ public class NewFilmDto {
+     private MpaRequestDto mpa;
+ 
+     private Set<GenreRequestDto> genres;
++
++    private Set<DirectorRequestDto> directors;
+ }
+diff --git a/src/main/java/ru/yandex/practicum/filmorate/model/Director.java b/src/main/java/ru/yandex/practicum/filmorate/model/Director.java
+new file mode 100644
+index 0000000..93e30e8
+--- /dev/null
++++ b/src/main/java/ru/yandex/practicum/filmorate/model/Director.java
+@@ -0,0 +1,15 @@
++package ru.yandex.practicum.filmorate.model;
++
++import lombok.AllArgsConstructor;
++import lombok.Data;
++import lombok.EqualsAndHashCode;
++import lombok.NoArgsConstructor;
++
++@Data
++@AllArgsConstructor
++@NoArgsConstructor
++@EqualsAndHashCode(of = {"id"})
++public class Director {
++    private Integer id;
++    private String name;
++}
+diff --git a/src/main/java/ru/yandex/practicum/filmorate/model/Film.java b/src/main/java/ru/yandex/practicum/filmorate/model/Film.java
+index 429e1d2..ab19c30 100644
+--- a/src/main/java/ru/yandex/practicum/filmorate/model/Film.java
++++ b/src/main/java/ru/yandex/practicum/filmorate/model/Film.java
+@@ -22,8 +22,9 @@ public class Film {
+     private Mpa mpa;
+     private Set<Genre> genres = new HashSet<>();
+     private Set<Integer> likes = new HashSet<>();
++    private Set<Director> directors = new HashSet<>();
+ 
+     public int getLikesCount() {
+         return likes.size();
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/src/main/java/ru/yandex/practicum/filmorate/service/DirectorService.java b/src/main/java/ru/yandex/practicum/filmorate/service/DirectorService.java
+new file mode 100644
+index 0000000..ffe2bd1
+--- /dev/null
++++ b/src/main/java/ru/yandex/practicum/filmorate/service/DirectorService.java
+@@ -0,0 +1,86 @@
++package ru.yandex.practicum.filmorate.service;
++
++import lombok.RequiredArgsConstructor;
++import lombok.extern.slf4j.Slf4j;
++import org.springframework.stereotype.Service;
++import ru.yandex.practicum.filmorate.dto.director.DirectorDto;
++import ru.yandex.practicum.filmorate.dto.film.FilmDto;
++import ru.yandex.practicum.filmorate.exception.NotFoundException;
++import ru.yandex.practicum.filmorate.mapper.FilmMapper; // Добавляем импорт
++import ru.yandex.practicum.filmorate.model.Director;
++import ru.yandex.practicum.filmorate.model.Film;
++import ru.yandex.practicum.filmorate.storage.DirectorStorage;
++import ru.yandex.practicum.filmorate.storage.FilmStorage; // Добавляем FilmStorage
++
++import java.util.List;
++import java.util.Optional;
++
++@Slf4j
++@Service
++@RequiredArgsConstructor
++public class DirectorService {
++
++    private final DirectorStorage directorStorage;
++    private final FilmStorage filmStorage; // Добавляем FilmStorage для получения фильмов
++
++    public List<DirectorDto> getAllDirectors() {
++        return directorStorage.getAllDirectors().stream()
++                .map(this::mapToDirectorDto)
++                .toList();
++    }
++
++    public DirectorDto getDirectorById(int id) {
++        return Optional.ofNullable(directorStorage.getDirectorById(id))
++                .map(this::mapToDirectorDto)
++                .orElseThrow(() -> new NotFoundException("Режиссер с id:" + id + " не найден"));
++    }
++
++    public DirectorDto createDirector(DirectorDto directorDto) {
++        Director director = mapToDirector(directorDto);
++        Director createdDirector = directorStorage.createDirector(director);
++        return mapToDirectorDto(createdDirector);
++    }
++
++    public DirectorDto updateDirector(DirectorDto directorDto) {
++        if (directorStorage.getDirectorById(directorDto.getId()) == null) {
++            throw new NotFoundException("Режиссер с id:" + directorDto.getId() + " не найден");
++        }
++        Director director = mapToDirector(directorDto);
++        Director updatedDirector = directorStorage.updateDirector(director);
++        return mapToDirectorDto(updatedDirector);
++    }
++
++    public void deleteDirector(int id) {
++        if (directorStorage.getDirectorById(id) == null) {
++            throw new NotFoundException("Режиссер с id:" + id + " не найден");
++        }
++        directorStorage.deleteDirector(id);
++    }
++
++    public List<FilmDto> getDirectorFilms(int directorId, String sortBy) {
++        if (directorStorage.getDirectorById(directorId) == null) {
++            throw new NotFoundException("Режиссер с id:" + directorId + " не найден");
++        }
++
++        // Используем filmStorage для получения фильмов режиссера
++        List<Film> films = filmStorage.getDirectorFilms(directorId, sortBy);
++
++        return films.stream()
++                .map(FilmMapper::mapToFilmDto)
++                .toList();
++    }
++
++    private DirectorDto mapToDirectorDto(Director director) {
++        DirectorDto dto = new DirectorDto();
++        dto.setId(director.getId());
++        dto.setName(director.getName());
++        return dto;
++    }
++
++    private Director mapToDirector(DirectorDto directorDto) {
++        Director director = new Director();
++        director.setId(directorDto.getId());
++        director.setName(directorDto.getName());
++        return director;
++    }
++}
+diff --git a/src/main/java/ru/yandex/practicum/filmorate/service/FilmService.java b/src/main/java/ru/yandex/practicum/filmorate/service/FilmService.java
+index 63e34e9..3f1ed48 100644
+--- a/src/main/java/ru/yandex/practicum/filmorate/service/FilmService.java
++++ b/src/main/java/ru/yandex/practicum/filmorate/service/FilmService.java
+@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
+ import lombok.RequiredArgsConstructor;
+ import lombok.extern.slf4j.Slf4j;
+ import org.springframework.stereotype.Service;
++import ru.yandex.practicum.filmorate.dto.DirectorRequestDto;
+ import ru.yandex.practicum.filmorate.dto.GenreRequestDto;
+ import ru.yandex.practicum.filmorate.dto.film.FilmDto;
+ import ru.yandex.practicum.filmorate.dto.film.NewFilmDto;
+@@ -10,10 +11,8 @@ import ru.yandex.practicum.filmorate.dto.film.UpdateFilmDto;
+ import ru.yandex.practicum.filmorate.exception.NotFoundException;
+ import ru.yandex.practicum.filmorate.exception.ValidationException;
+ import ru.yandex.practicum.filmorate.mapper.FilmMapper;
+-import ru.yandex.practicum.filmorate.model.Film;
+-import ru.yandex.practicum.filmorate.model.Genre;
+-import ru.yandex.practicum.filmorate.model.Mpa;
+-import ru.yandex.practicum.filmorate.model.User;
++import ru.yandex.practicum.filmorate.model.*;
++import ru.yandex.practicum.filmorate.storage.DirectorStorage;
+ import ru.yandex.practicum.filmorate.storage.FilmStorage;
+ import ru.yandex.practicum.filmorate.storage.UserStorage;
+ 
+@@ -28,6 +27,7 @@ import java.util.stream.Collectors;
+ public class FilmService {
+     private final FilmStorage filmStorage;
+     private final UserStorage userStorage;
++    private final DirectorStorage directorStorage;
+ 
+     public FilmDto createFilm(NewFilmDto newFilmDto) {
+         Mpa mpa = Optional.ofNullable(filmStorage.getRatingById(newFilmDto.getMpa().getId()))
+@@ -43,9 +43,25 @@ public class FilmService {
+             film.setGenres(mapFilmGenres(newFilmDto.getGenres()));
+         }
+ 
++        if (newFilmDto.getDirectors() != null && !newFilmDto.getDirectors().isEmpty()) {
++            film.setDirectors(mapFilmDirectors(newFilmDto.getDirectors()));
++        }
++
+         return FilmMapper.mapToFilmDto(filmStorage.createFilm(film));
+     }
+ 
++    private Set<Director> mapFilmDirectors(Set<DirectorRequestDto> filmRequestDirectors) {
++        Map<Integer, Director> directorsFromDb = directorStorage.getAllDirectors().stream()
++                .collect(Collectors.toMap(Director::getId, Function.identity()));
++
++        return filmRequestDirectors.stream()
++                .map(director -> Optional.ofNullable(directorsFromDb.get(director.getId())).orElseThrow(() -> {
++                    log.info("Director not exists: {}", director);
++                    return new NotFoundException("Режиссер не существует id: " + director.getId());
++                }))
++                .collect(Collectors.toSet());
++    }
++
+     public List<FilmDto> getAllFilms() {
+         List<Film> films = filmStorage.getAllFilms();
+         if (films.isEmpty()) {
+@@ -166,4 +182,14 @@ public class FilmService {
+                 .sorted(Comparator.comparing(Genre::getId))
+                 .collect(Collectors.toCollection(LinkedHashSet::new));
+     }
++
++    public List<FilmDto> searchFilms(String query, List<String> searchBy) {
++        List<Film> films = filmStorage.searchFilms(query, searchBy);
++        if (films.isEmpty()) {
++            return Collections.emptyList();
++        }
++        return films.stream()
++                .map(FilmMapper::mapToFilmDto)
++                .toList();
++    }
+ }
+diff --git a/src/main/java/ru/yandex/practicum/filmorate/storage/DirectorStorage.java b/src/main/java/ru/yandex/practicum/filmorate/storage/DirectorStorage.java
+new file mode 100644
+index 0000000..1da7104
+--- /dev/null
++++ b/src/main/java/ru/yandex/practicum/filmorate/storage/DirectorStorage.java
+@@ -0,0 +1,16 @@
++package ru.yandex.practicum.filmorate.storage;
++
++import ru.yandex.practicum.filmorate.model.Director;
++import java.util.List;
++
++public interface DirectorStorage {
++    List<Director> getAllDirectors();
++
++    Director getDirectorById(int directorId);
++
++    Director createDirector(Director director);
++
++    Director updateDirector(Director director);
++
++    void deleteDirector(int directorId);
++}
+diff --git a/src/main/java/ru/yandex/practicum/filmorate/storage/FilmStorage.java b/src/main/java/ru/yandex/practicum/filmorate/storage/FilmStorage.java
+index 410b593..0194c5a 100644
+--- a/src/main/java/ru/yandex/practicum/filmorate/storage/FilmStorage.java
++++ b/src/main/java/ru/yandex/practicum/filmorate/storage/FilmStorage.java
+@@ -30,4 +30,8 @@ public interface FilmStorage {
+     void deleteLike(int filmId, int userId);
+ 
+     List<Film> getMostPopular(int count);
++
++    List<Film> searchFilms(String query, List<String> searchBy);
++
++    List<Film> getDirectorFilms(int directorId, String sortBy);
+ }
+diff --git a/src/main/java/ru/yandex/practicum/filmorate/storage/database/DirectorDbStorage.java b/src/main/java/ru/yandex/practicum/filmorate/storage/database/DirectorDbStorage.java
+new file mode 100644
+index 0000000..3772d00
+--- /dev/null
++++ b/src/main/java/ru/yandex/practicum/filmorate/storage/database/DirectorDbStorage.java
+@@ -0,0 +1,61 @@
++package ru.yandex.practicum.filmorate.storage.database;
++
++import org.springframework.dao.EmptyResultDataAccessException;
++import org.springframework.jdbc.core.JdbcTemplate;
++import org.springframework.jdbc.core.RowMapper;
++import org.springframework.stereotype.Repository;
++import ru.yandex.practicum.filmorate.model.Director;
++import ru.yandex.practicum.filmorate.storage.DirectorStorage;
++
++import java.util.List;
++
++@Repository
++public class DirectorDbStorage extends BaseDbStorage<Director> implements DirectorStorage {
++
++    private static final String FIND_ALL_DIRECTORS_QUERY = "SELECT * FROM DIRECTOR ORDER BY director_id";
++    private static final String FIND_DIRECTOR_BY_ID_QUERY = "SELECT * FROM DIRECTOR WHERE director_id = ?";
++    private static final String INSERT_DIRECTOR_QUERY = "INSERT INTO DIRECTOR(name) VALUES (?)";
++    private static final String UPDATE_DIRECTOR_QUERY = "UPDATE DIRECTOR SET name = ? WHERE director_id = ?";
++    private static final String DELETE_DIRECTOR_QUERY = "DELETE FROM DIRECTOR WHERE director_id = ?";
++
++    private final JdbcTemplate jdbc;
++    private final RowMapper<Director> directorRowMapper;
++
++    public DirectorDbStorage(JdbcTemplate jdbc, RowMapper<Director> directorRowMapper) {
++        super(jdbc, directorRowMapper);
++        this.jdbc = jdbc;
++        this.directorRowMapper = directorRowMapper;
++    }
++
++    @Override
++    public List<Director> getAllDirectors() {
++        return findMany(FIND_ALL_DIRECTORS_QUERY);
++    }
++
++    @Override
++    public Director getDirectorById(int directorId) {
++        try {
++            return jdbc.queryForObject(FIND_DIRECTOR_BY_ID_QUERY, directorRowMapper, directorId);
++        } catch (EmptyResultDataAccessException ignored) {
++            return null;
++        }
++    }
++
++    @Override
++    public Director createDirector(Director director) {
++        int id = insert(INSERT_DIRECTOR_QUERY, director.getName());
++        director.setId(id);
++        return director;
++    }
++
++    @Override
++    public Director updateDirector(Director director) {
++        update(UPDATE_DIRECTOR_QUERY, director.getName(), director.getId());
++        return director;
++    }
++
++    @Override
++    public void deleteDirector(int directorId) {
++        delete(DELETE_DIRECTOR_QUERY, directorId);
++    }
++}
+diff --git a/src/main/java/ru/yandex/practicum/filmorate/storage/database/FilmDbStorage.java b/src/main/java/ru/yandex/practicum/filmorate/storage/database/FilmDbStorage.java
+index bae3499..e000823 100644
+--- a/src/main/java/ru/yandex/practicum/filmorate/storage/database/FilmDbStorage.java
++++ b/src/main/java/ru/yandex/practicum/filmorate/storage/database/FilmDbStorage.java
+@@ -1,6 +1,5 @@
+ package ru.yandex.practicum.filmorate.storage.database;
+ 
+-import org.springframework.context.annotation.Primary;
+ import org.springframework.dao.EmptyResultDataAccessException;
+ import org.springframework.jdbc.core.BatchPreparedStatementSetter;
+ import org.springframework.jdbc.core.JdbcTemplate;
+@@ -9,6 +8,7 @@ import org.springframework.stereotype.Repository;
+ import ru.yandex.practicum.filmorate.model.Film;
+ import ru.yandex.practicum.filmorate.model.Genre;
+ import ru.yandex.practicum.filmorate.model.Mpa;
++import ru.yandex.practicum.filmorate.model.Director;
+ import ru.yandex.practicum.filmorate.storage.FilmStorage;
+ 
+ import java.sql.Date;
+@@ -19,29 +19,45 @@ import java.util.HashMap;
+ import java.util.List;
+ import java.util.Map;
+ 
+-@Primary
+ @Repository
+ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
+ 
+     private static final String FIND_ALL_FILMS_QUERY = "SELECT " +
+-            "f.FILM_ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, f.RATING_ID, r.NAME as RATING_NAME, g.GENRE_ID, g.NAME AS GENRE, fl.USER_ID AS \"LIKE\" " +
+-            "FROM FILM f LEFT JOIN RATING r ON f.rating_id = r.rating_id " +
++            "f.FILM_ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, " +
++            "f.RATING_ID, r.NAME as RATING_NAME, g.GENRE_ID, g.NAME AS GENRE, " +
++            "fl.USER_ID AS \"LIKE\", d.DIRECTOR_ID, d.NAME AS DIRECTOR_NAME " +
++            "FROM FILM f " +
++            "LEFT JOIN RATING r ON f.rating_id = r.rating_id " +
+             "LEFT JOIN FILM_GENRE fg ON f.FILM_ID = fg.FILM_ID " +
+             "LEFT JOIN GENRE g ON fg.GENRE_ID = g.GENRE_ID " +
+-            "LEFT JOIN FILM_LIKE fl ON f.FILM_ID = fl.FILM_ID";
++            "LEFT JOIN FILM_LIKE fl ON f.FILM_ID = fl.FILM_ID " +
++            "LEFT JOIN FILM_DIRECTOR fd ON f.FILM_ID = fd.FILM_ID " +
++            "LEFT JOIN DIRECTOR d ON fd.DIRECTOR_ID = d.DIRECTOR_ID";
++
+     private static final String FIND_FILM_BY_ID_QUERY = "SELECT " +
+-            "f.FILM_ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, f.RATING_ID, r.NAME as RATING_NAME, g.GENRE_ID, g.NAME AS GENRE, fl.USER_ID AS \"LIKE\" " +
+-            "FROM FILM f LEFT JOIN RATING r ON f.rating_id = r.rating_id " +
++            "f.FILM_ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, " +
++            "f.RATING_ID, r.NAME as RATING_NAME, g.GENRE_ID, g.NAME AS GENRE, " +
++            "fl.USER_ID AS \"LIKE\", d.DIRECTOR_ID, d.NAME AS DIRECTOR_NAME " +
++            "FROM FILM f " +
++            "LEFT JOIN RATING r ON f.rating_id = r.rating_id " +
+             "LEFT JOIN FILM_GENRE fg ON f.FILM_ID = fg.FILM_ID " +
+             "LEFT JOIN GENRE g ON fg.GENRE_ID = g.GENRE_ID " +
+             "LEFT JOIN FILM_LIKE fl ON f.FILM_ID = fl.FILM_ID " +
++            "LEFT JOIN FILM_DIRECTOR fd ON f.FILM_ID = fd.FILM_ID " +
++            "LEFT JOIN DIRECTOR d ON fd.DIRECTOR_ID = d.DIRECTOR_ID " +
+             "WHERE f.FILM_ID = ?";
++
+     private static final String INSERT_FILM_QUERY = "INSERT INTO FILM(name, description, release_date, duration, rating_id) " +
+             "VALUES (?, ?, ?, ?, ?)";
+-    private static final String UPDATE_QUERY = "UPDATE FILM " +
+-            "SET name = ?, description = ?, release_date = ?, duration = ?, rating_id = ?";
++
++    private static final String UPDATE_FILM_QUERY = "UPDATE FILM " +
++            "SET name = ?, description = ?, release_date = ?, duration = ?, rating_id = ? " +
++            "WHERE film_id = ?";
++
+     private static final String MOST_POPULAR_FILMS_QUERY = "SELECT " +
+-            "f.FILM_ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, f.RATING_ID, r.NAME as RATING_NAME, g.GENRE_ID, g.NAME AS GENRE, fl.USER_ID AS \"LIKE\" " +
++            "f.FILM_ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, " +
++            "f.RATING_ID, r.NAME as RATING_NAME, g.GENRE_ID, g.NAME AS GENRE, " +
++            "fl.USER_ID AS \"LIKE\", d.DIRECTOR_ID, d.NAME AS DIRECTOR_NAME " +
+             "FROM FILM f JOIN " +
+             "(SELECT film_id, count(user_id) AS likes_count FROM FILM_LIKE GROUP BY film_id ORDER BY count(user_id) DESC, film_id LIMIT ?) p " +
+             "ON (f.film_id = p.film_id) " +
+@@ -49,30 +65,45 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
+             "LEFT JOIN FILM_GENRE fg ON f.FILM_ID = fg.FILM_ID " +
+             "LEFT JOIN GENRE g ON fg.GENRE_ID = g.GENRE_ID " +
+             "LEFT JOIN FILM_LIKE fl ON f.FILM_ID = fl.FILM_ID " +
++            "LEFT JOIN FILM_DIRECTOR fd ON f.FILM_ID = fd.FILM_ID " +
++            "LEFT JOIN DIRECTOR d ON fd.DIRECTOR_ID = d.DIRECTOR_ID " +
+             "ORDER BY p.likes_count DESC";
+-    private static final String ALL_GENRES_QUERY =
+-            "SELECT * FROM GENRE";
+-    private static final String FIND_GENRE_BY_ID_QUERY =
+-            "SELECT * FROM GENRE WHERE genre_id = ?";
+-    private static final String DELETE_FILM_GENRES_QUERY =
+-            "DELETE FROM FILM_GENRE WHERE film_id = ?";
+-    private static final String ALL_RATINGS_QUERY =
+-            "SELECT * FROM RATING";
+-    private static final String FIND_RATING_BY_ID_QUERY =
+-            "SELECT rating_id, name FROM RATING WHERE rating_id = ?";
+-    private static final String FILM_LIKES_QUERY =
+-            "SELECT user_id FROM FILM_LIKE WHERE film_id = ?";
+-    private static final String ADD_LIKE_QUERY =
+-            "MERGE INTO FILM_LIKE (film_id, user_id) KEY (film_id, user_id) VALUES (?, ?)";
+-    private static final String DELETE_LIKE_QUERY =
+-            "DELETE FROM FILM_LIKE where film_id = ? AND user_id = ?";
+-    private static final String ADD_MULTIPLE_GENRES_QUERY =
+-            "INSERT INTO FILM_GENRE(film_id, genre_id) VALUES (?, ?)";
++
++    private static final String SEARCH_FILMS_QUERY = "SELECT " +
++            "f.FILM_ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, " +
++            "f.RATING_ID, r.NAME as RATING_NAME, g.GENRE_ID, g.NAME AS GENRE, " +
++            "fl.USER_ID AS \"LIKE\", d.DIRECTOR_ID, d.NAME AS DIRECTOR_NAME " +
++            "FROM FILM f " +
++            "LEFT JOIN RATING r ON f.rating_id = r.rating_id " +
++            "LEFT JOIN FILM_GENRE fg ON f.FILM_ID = fg.FILM_ID " +
++            "LEFT JOIN GENRE g ON fg.GENRE_ID = g.GENRE_ID " +
++            "LEFT JOIN FILM_LIKE fl ON f.FILM_ID = fl.FILM_ID " +
++            "LEFT JOIN FILM_DIRECTOR fd ON f.FILM_ID = fd.FILM_ID " +
++            "LEFT JOIN DIRECTOR d ON fd.DIRECTOR_ID = d.DIRECTOR_ID " +
++            "WHERE 1=1";
++
++    private static final String ALL_GENRES_QUERY = "SELECT * FROM GENRE";
++    private static final String FIND_GENRE_BY_ID_QUERY = "SELECT * FROM GENRE WHERE genre_id = ?";
++    private static final String ALL_RATINGS_QUERY = "SELECT * FROM RATING";
++    private static final String FIND_RATING_BY_ID_QUERY = "SELECT rating_id, name FROM RATING WHERE rating_id = ?";
++    private static final String FILM_LIKES_QUERY = "SELECT user_id FROM FILM_LIKE WHERE film_id = ?";
++    private static final String ADD_LIKE_QUERY = "MERGE INTO FILM_LIKE (film_id, user_id) KEY (film_id, user_id) VALUES (?, ?)";
++    private static final String DELETE_LIKE_QUERY = "DELETE FROM FILM_LIKE where film_id = ? AND user_id = ?";
++    private static final String DELETE_FILM_GENRES_QUERY = "DELETE FROM FILM_GENRE WHERE film_id = ?";
++    private static final String ADD_FILM_GENRE_QUERY = "INSERT INTO FILM_GENRE(film_id, genre_id) VALUES (?, ?)";
++    private static final String DELETE_FILM_DIRECTORS_QUERY = "DELETE FROM FILM_DIRECTOR WHERE film_id = ?";
++    private static final String ADD_FILM_DIRECTOR_QUERY = "INSERT INTO FILM_DIRECTOR(film_id, director_id) VALUES (?, ?)";
++
++    private final JdbcTemplate jdbc;
++    private final RowMapper<Film> filmRowMapper;
+     private final RowMapper<Genre> genreRowMapper;
+     private final RowMapper<Mpa> mpaRowMapper;
+ 
+-    public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper, RowMapper<Genre> genreRowMapper, RowMapper<Mpa> mpaRowMapper) {
+-        super(jdbc, mapper);
++    public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> filmRowMapper,
++                         RowMapper<Genre> genreRowMapper, RowMapper<Mpa> mpaRowMapper) {
++        super(jdbc, filmRowMapper);
++        this.jdbc = jdbc;
++        this.filmRowMapper = filmRowMapper;
+         this.genreRowMapper = genreRowMapper;
+         this.mpaRowMapper = mpaRowMapper;
+     }
+@@ -89,7 +120,15 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
+         );
+         film.setId(id);
+ 
+-        addFilmGenres(id, film.getGenres().stream().toList());
++        // Сохраняем жанры
++        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
++            addFilmGenres(id, film.getGenres().stream().toList());
++        }
++
++        // Сохраняем режиссеров
++        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
++            addFilmDirectors(id, film.getDirectors().stream().toList());
++        }
+ 
+         return film;
+     }
+@@ -97,10 +136,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
+     @Override
+     public List<Film> getAllFilms() {
+         List<Film> rawFilms = findMany(FIND_ALL_FILMS_QUERY);
+-        if (rawFilms.isEmpty()) {
+-            return rawFilms;
+-        }
+-        return groupValues(rawFilms);
++        return groupFilmValues(rawFilms);
+     }
+ 
+     @Override
+@@ -109,22 +145,32 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
+         if (rawFilms.isEmpty()) {
+             return null;
+         }
+-        return groupValues(rawFilms).getFirst();
++        return groupFilmValues(rawFilms).getFirst();
+     }
+ 
+     @Override
+     public Film updateFilm(Film newFilm) {
+         update(
+-                UPDATE_QUERY,
++                UPDATE_FILM_QUERY,
+                 newFilm.getName(),
+                 newFilm.getDescription(),
+                 Date.valueOf(newFilm.getReleaseDate()),
+                 newFilm.getDuration(),
+-                newFilm.getMpa().getId()
++                newFilm.getMpa().getId(),
++                newFilm.getId()
+         );
+ 
++        // Обновляем жанры
+         delete(DELETE_FILM_GENRES_QUERY, newFilm.getId());
+-        addFilmGenres(newFilm.getId(), newFilm.getGenres().stream().toList());
++        if (newFilm.getGenres() != null && !newFilm.getGenres().isEmpty()) {
++            addFilmGenres(newFilm.getId(), newFilm.getGenres().stream().toList());
++        }
++
++        // Обновляем режиссеров
++        delete(DELETE_FILM_DIRECTORS_QUERY, newFilm.getId());
++        if (newFilm.getDirectors() != null && !newFilm.getDirectors().isEmpty()) {
++            addFilmDirectors(newFilm.getId(), newFilm.getDirectors().stream().toList());
++        }
+ 
+         return newFilm;
+     }
+@@ -143,22 +189,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
+         }
+     }
+ 
+-    public void addFilmGenres(int filmId, List<Genre> genres) {
+-        jdbc.batchUpdate(ADD_MULTIPLE_GENRES_QUERY, new BatchPreparedStatementSetter() {
+-            @Override
+-            public void setValues(PreparedStatement ps, int i) throws SQLException {
+-                Genre genre = genres.get(i);
+-                ps.setInt(1, filmId);
+-                ps.setInt(2, genre.getId());
+-            }
+-
+-            @Override
+-            public int getBatchSize() {
+-                return genres.size();
+-            }
+-        });
+-    }
+-
+     @Override
+     public List<Mpa> getRatings() {
+         return jdbc.query(ALL_RATINGS_QUERY, mpaRowMapper);
+@@ -180,41 +210,128 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
+ 
+     @Override
+     public void addLike(int filmId, int userId) {
+-        update(ADD_LIKE_QUERY, filmId, userId);
++        jdbc.update(ADD_LIKE_QUERY, filmId, userId);
+     }
+ 
+     @Override
+     public void deleteLike(int filmId, int userId) {
+-        update(DELETE_LIKE_QUERY, filmId, userId);
++        jdbc.update(DELETE_LIKE_QUERY, filmId, userId);
+     }
+ 
+     @Override
+     public List<Film> getMostPopular(int count) {
+         List<Film> rawFilms = findMany(MOST_POPULAR_FILMS_QUERY, count);
+-        if (rawFilms.isEmpty()) {
+-            return rawFilms;
+-        }
+-        return groupValues(rawFilms).stream()
++        return groupFilmValues(rawFilms).stream()
+                 .sorted(Comparator.comparing(Film::getLikesCount).reversed())
+                 .toList();
+     }
+ 
+-    private List<Film> groupValues(List<Film> rawFilms) {
++    @Override
++    public List<Film> searchFilms(String query, List<String> searchBy) {
++        StringBuilder sqlBuilder = new StringBuilder(SEARCH_FILMS_QUERY);
++        String searchQuery = "%" + query.toLowerCase() + "%";
++
++        if (searchBy.contains("title") && searchBy.contains("director")) {
++            sqlBuilder.append(" AND (LOWER(f.NAME) LIKE ? OR LOWER(d.NAME) LIKE ?)");
++            List<Film> rawFilms = findMany(sqlBuilder.toString(), searchQuery, searchQuery);
++            return groupFilmValues(rawFilms);
++        } else if (searchBy.contains("title")) {
++            sqlBuilder.append(" AND LOWER(f.NAME) LIKE ?");
++            List<Film> rawFilms = findMany(sqlBuilder.toString(), searchQuery);
++            return groupFilmValues(rawFilms);
++        } else if (searchBy.contains("director")) {
++            sqlBuilder.append(" AND LOWER(d.NAME) LIKE ?");
++            List<Film> rawFilms = findMany(sqlBuilder.toString(), searchQuery);
++            return groupFilmValues(rawFilms);
++        }
++
++        return List.of();
++    }
++
++    private void addFilmGenres(int filmId, List<Genre> genres) {
++        jdbc.batchUpdate(ADD_FILM_GENRE_QUERY, new BatchPreparedStatementSetter() {
++            @Override
++            public void setValues(PreparedStatement ps, int i) throws SQLException {
++                Genre genre = genres.get(i);
++                ps.setInt(1, filmId);
++                ps.setInt(2, genre.getId());
++            }
++
++            @Override
++            public int getBatchSize() {
++                return genres.size();
++            }
++        });
++    }
++
++    private void addFilmDirectors(int filmId, List<Director> directors) {
++        jdbc.batchUpdate(ADD_FILM_DIRECTOR_QUERY, new BatchPreparedStatementSetter() {
++            @Override
++            public void setValues(PreparedStatement ps, int i) throws SQLException {
++                Director director = directors.get(i);
++                ps.setInt(1, filmId);
++                ps.setInt(2, director.getId());
++            }
++
++            @Override
++            public int getBatchSize() {
++                return directors.size();
++            }
++        });
++    }
++
++    private List<Film> groupFilmValues(List<Film> rawFilms) {
+         Map<Integer, Film> films = new HashMap<>();
+         for (Film film : rawFilms) {
+-            films.compute(film.getId(), (id, flm) -> {
+-                if (flm == null) {
++            films.compute(film.getId(), (id, existingFilm) -> {
++                if (existingFilm == null) {
+                     return film;
+                 }
++                // Добавляем жанры
+                 if (!film.getGenres().isEmpty()) {
+-                    flm.getGenres().addAll(film.getGenres());
++                    film.getGenres().forEach(genre -> {
++                        if (!existingFilm.getGenres().contains(genre)) {
++                            existingFilm.getGenres().add(genre);
++                        }
++                    });
+                 }
++                // Добавляем лайки
+                 if (!film.getLikes().isEmpty()) {
+-                    flm.getLikes().addAll(film.getLikes());
++                    film.getLikes().forEach(like -> {
++                        if (!existingFilm.getLikes().contains(like)) {
++                            existingFilm.getLikes().add(like);
++                        }
++                    });
++                }
++                // Добавляем режиссеров
++                if (!film.getDirectors().isEmpty()) {
++                    film.getDirectors().forEach(director -> {
++                        if (!existingFilm.getDirectors().contains(director)) {
++                            existingFilm.getDirectors().add(director);
++                        }
++                    });
+                 }
+-                return flm;
++                return existingFilm;
+             });
+         }
+         return films.values().stream().toList();
+     }
++
++    @Override
++    public List<Film> getDirectorFilms(int directorId, String sortBy) {
++        StringBuilder sqlBuilder = new StringBuilder(FIND_ALL_FILMS_QUERY);
++        sqlBuilder.append(" WHERE d.DIRECTOR_ID = ?");
++
++        // Добавляем сортировку
++        if ("year".equals(sortBy)) {
++            sqlBuilder.append(" ORDER BY f.RELEASE_DATE");
++        } else if ("likes".equals(sortBy)) {
++            sqlBuilder.append(" ORDER BY (SELECT COUNT(*) FROM FILM_LIKE fl2 WHERE fl2.FILM_ID = f.FILM_ID) DESC");
++        } else {
++            sqlBuilder.append(" ORDER BY f.FILM_ID"); // сортировка по умолчанию
++        }
++
++        List<Film> rawFilms = findMany(sqlBuilder.toString(), directorId);
++        return groupFilmValues(rawFilms);
++    }
+ }
+diff --git a/src/main/java/ru/yandex/practicum/filmorate/storage/database/mapper/DirectorRowMapper.java b/src/main/java/ru/yandex/practicum/filmorate/storage/database/mapper/DirectorRowMapper.java
+new file mode 100644
+index 0000000..6297f8f
+--- /dev/null
++++ b/src/main/java/ru/yandex/practicum/filmorate/storage/database/mapper/DirectorRowMapper.java
+@@ -0,0 +1,20 @@
++package ru.yandex.practicum.filmorate.storage.database.mapper;
++
++import org.springframework.jdbc.core.RowMapper;
++import org.springframework.stereotype.Component;
++import ru.yandex.practicum.filmorate.model.Director;
++
++import java.sql.ResultSet;
++import java.sql.SQLException;
++
++@Component
++public class DirectorRowMapper implements RowMapper<Director> {
++
++    @Override
++    public Director mapRow(ResultSet rs, int rowNum) throws SQLException {
++        Director director = new Director();
++        director.setId(rs.getInt("director_id"));
++        director.setName(rs.getString("name"));
++        return director;
++    }
++}
+diff --git a/src/main/java/ru/yandex/practicum/filmorate/storage/database/mapper/FilmRowMapper.java b/src/main/java/ru/yandex/practicum/filmorate/storage/database/mapper/FilmRowMapper.java
+index d846c18..8e71ba6 100644
+--- a/src/main/java/ru/yandex/practicum/filmorate/storage/database/mapper/FilmRowMapper.java
++++ b/src/main/java/ru/yandex/practicum/filmorate/storage/database/mapper/FilmRowMapper.java
+@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
+ import ru.yandex.practicum.filmorate.model.Film;
+ import ru.yandex.practicum.filmorate.model.Genre;
+ import ru.yandex.practicum.filmorate.model.Mpa;
++import ru.yandex.practicum.filmorate.model.Director;
+ 
+ import java.sql.ResultSet;
+ import java.sql.SQLException;
+@@ -21,15 +22,25 @@ public class FilmRowMapper implements RowMapper<Film> {
+         film.setReleaseDate(rs.getDate("release_date").toLocalDate());
+         film.setDuration(rs.getInt("duration"));
+         film.setMpa(new Mpa(rs.getInt("rating_id"), rs.getString("rating_name")));
++
++        // Обрабатываем жанр
+         int genreId = rs.getInt("genre_id");
+         if (genreId != 0) {
+             film.getGenres().add(new Genre(rs.getInt("genre_id"), rs.getString("genre")));
+         }
++
++        // Обрабатываем лайк
+         int like = rs.getInt("like");
+         if (like != 0) {
+             film.getLikes().add(like);
+         }
+ 
++        // Обрабатываем режиссера
++        int directorId = rs.getInt("director_id");
++        if (directorId != 0) {
++            film.getDirectors().add(new Director(directorId, rs.getString("director_name")));
++        }
++
+         return film;
+     }
+ }
+diff --git a/src/main/resources/schema.sql b/src/main/resources/schema.sql
+index 92c7988..7b27048 100644
+--- a/src/main/resources/schema.sql
++++ b/src/main/resources/schema.sql
+@@ -59,6 +59,20 @@ CREATE TABLE IF NOT EXISTS FRIENDSHIP_STATUS
+     CONSTRAINT status_values CHECK(status IN ('NOT_CONFIRMED', 'CONFIRMED'))
+ );
+ 
++CREATE TABLE IF NOT EXISTS DIRECTOR
++(
++    director_id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
++    name        varchar(100) NOT NULL,
++    CONSTRAINT director_name_not_blank CHECK (name <> '')
++);
++
++CREATE TABLE IF NOT EXISTS FILM_DIRECTOR
++(
++    film_id     integer NOT NULL,
++    director_id integer NOT NULL,
++    PRIMARY KEY (film_id, director_id)
++);
++
+ ALTER TABLE film ADD FOREIGN KEY (rating_id) REFERENCES RATING (rating_id);
+ 
+ ALTER TABLE film_like ADD FOREIGN KEY (film_id) REFERENCES FILM (film_id) ON DELETE CASCADE;
+@@ -75,4 +89,8 @@ ALTER TABLE friendship ADD FOREIGN KEY (friend_id) REFERENCES USERS (user_id) ON
+ 
+ ALTER TABLE friendship ADD FOREIGN KEY (friendship_status_id) REFERENCES FRIENDSHIP_STATUS (friendship_status_id);
+ 
+-CREATE INDEX IF NOT EXISTS IDX_FRIENDSHIP ON FRIENDSHIP(user_id, friend_id);
+\ No newline at end of file
++CREATE INDEX IF NOT EXISTS IDX_FRIENDSHIP ON FRIENDSHIP(user_id, friend_id);
++
++ALTER TABLE FILM_DIRECTOR ADD FOREIGN KEY (film_id) REFERENCES FILM (film_id) ON DELETE CASCADE;
++
++ALTER TABLE FILM_DIRECTOR ADD FOREIGN KEY (director_id) REFERENCES DIRECTOR (director_id) ON DELETE CASCADE;
