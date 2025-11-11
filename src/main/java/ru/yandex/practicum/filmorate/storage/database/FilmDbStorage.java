@@ -42,7 +42,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "SET name = ?, description = ?, release_date = ?, duration = ?, rating_id = ?";
     private static final String MOST_POPULAR_FILMS_QUERY = "SELECT " +
             "f.FILM_ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, f.RATING_ID, r.NAME as RATING_NAME, g.GENRE_ID, g.NAME AS GENRE, fl.USER_ID AS \"LIKE\" " +
-            "FROM FILM f JOIN " +
+            "FROM FILM f LEFT JOIN " +
             "(SELECT film_id, count(user_id) AS likes_count FROM FILM_LIKE GROUP BY film_id ORDER BY count(user_id) DESC, film_id LIMIT ?) p " +
             "ON (f.film_id = p.film_id) " +
             "JOIN rating r ON f.rating_id = r.rating_id " +
