@@ -149,12 +149,12 @@ public class UserService {
                 .toList();
     }
 
-    public void deleteUserById(int userId) {
-        User user = userStorage.getUserById(userId);
-        if (user == null) {
-            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
+    public boolean deleteUserById(int userId) {
+        boolean deleted = userStorage.deleteUserById(userId);
+        if (!deleted) {
+            throw new NotFoundException("Фильм с id=" + userId + " не найден");
         }
-        userStorage.deleteUserById(userId);
+        return true;
     }
 
 }

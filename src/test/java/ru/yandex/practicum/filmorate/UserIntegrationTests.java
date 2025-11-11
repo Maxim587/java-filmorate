@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 @JdbcTest
 @AutoConfigureTestDatabase
@@ -99,6 +100,20 @@ public class UserIntegrationTests {
         userDbStorage.deleteFriend(user1.getId(), user2.getId());
         assertThat(userDbStorage.getUserById(user1.getId()).getFriends()).isEmpty();
     }
+
+    @Test
+    public void deleteUserById() {
+        User user = userDbStorage.createUser(getUser());
+        int userId = user.getId();
+
+        assertThat(userDbStorage.getUserById(userId)).isNotNull();
+
+        boolean deleted = userDbStorage.deleteUserById(userId);
+
+        assertThat(deleted).isTrue();
+        assertThat(userDbStorage.getUserById(userId)).isNull();
+    }
+
 
     private User getUser() {
         User user = new User();

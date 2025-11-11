@@ -19,7 +19,7 @@ public interface UserStorage {
 
     boolean deleteFriend(int userId, int friendId);
 
-    void deleteUserById(int userId);
+    boolean deleteUserById(int userId);
 
     List<User> getUserFriends(int userId);
 

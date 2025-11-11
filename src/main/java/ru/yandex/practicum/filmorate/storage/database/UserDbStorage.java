@@ -155,7 +155,9 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     }
 
     @Override
-    public void deleteUserById(int userId) {
-        delete(DELETE_USER_QUERY, userId);
+    public boolean deleteUserById(int userId) {
+        int rowsAffected = jdbc.update(DELETE_USER_QUERY, userId);
+        return rowsAffected > 0;
     }
+
 }

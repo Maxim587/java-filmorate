@@ -167,12 +167,13 @@ public class FilmService {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
-    public void deleteFilmById(int filmId) {
-        Film film = filmStorage.getFilmById(filmId);
-        if (film == null) {
+    public boolean deleteFilmById(int filmId) {
+        boolean deleted = filmStorage.deleteFilmById(filmId);
+        if (!deleted) {
             throw new NotFoundException("Фильм с id=" + filmId + " не найден");
         }
-        filmStorage.deleteFilmById(filmId);
+        return true;
     }
+
 
 }

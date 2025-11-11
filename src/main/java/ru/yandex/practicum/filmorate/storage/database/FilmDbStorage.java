@@ -202,8 +202,9 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     }
 
     @Override
-    public void deleteFilmById(int filmId) {
-        delete(DELETE_FILM_QUERY, filmId);
+    public boolean deleteFilmById(int filmId) {
+        int rowsAffected = jdbc.update(DELETE_FILM_QUERY, filmId);
+        return rowsAffected > 0;
     }
 
     private List<Film> groupValues(List<Film> rawFilms) {
