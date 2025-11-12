@@ -100,6 +100,20 @@ public class UserIntegrationTests {
         assertThat(userDbStorage.getUserById(user1.getId()).getFriends()).isEmpty();
     }
 
+    @Test
+    public void deleteUserById() {
+        User user = userDbStorage.createUser(getUser());
+        int userId = user.getId();
+
+        assertThat(userDbStorage.getUserById(userId)).isNotNull();
+
+        boolean deleted = userDbStorage.deleteUserById(userId);
+
+        assertThat(deleted).isTrue();
+        assertThat(userDbStorage.getUserById(userId)).isNull();
+    }
+
+
     private User getUser() {
         User user = new User();
         user.setEmail("ex@ex.ru");

@@ -137,6 +137,20 @@ public class FilmIntegrationTests {
         assertThat(top.getLast().getId()).isEqualTo(film1.getId());
     }
 
+    @Test
+    public void deleteFilmById() {
+        Film film = filmDbStorage.createFilm(prepareFilms().getFirst());
+        int filmId = film.getId();
+
+        assertThat(filmDbStorage.getFilmById(filmId)).isNotNull();
+
+        boolean deleted = filmDbStorage.deleteFilmById(filmId);
+
+        assertThat(deleted).isTrue();
+        assertThat(filmDbStorage.getFilmById(filmId)).isNull();
+    }
+
+
     private List<Film> prepareFilms() {
         Film film = new Film();
         film.setName("name");
@@ -165,4 +179,6 @@ public class FilmIntegrationTests {
         user.setBirthday(LocalDate.of(1990, 1, 1));
         return user;
     }
+
+
 }

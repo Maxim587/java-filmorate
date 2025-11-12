@@ -43,7 +43,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String MOST_POPULAR_FILMS_QUERY = "SELECT " +
             "f.FILM_ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, f.RATING_ID, r.NAME as RATING_NAME, g.GENRE_ID, g.NAME AS GENRE, fl.USER_ID AS \"LIKE\" " +
             "FROM FILM f JOIN " +
-            "(SELECT film_id, count(user_id) AS likes_count FROM FILM_LIKE GROUP BY film_id ORDER BY count(user_id) DESC, film_id LIMIT ?) p " +
+            "(SELECT f1.film_id, count(user_id) AS likes_count FROM FILM f1 LEFT JOIN FILM_LIKE l1 using(film_id) GROUP BY f1.film_id ORDER BY count(user_id) DESC LIMIT ?) p " +
             "ON (f.film_id = p.film_id) " +
             "JOIN rating r ON f.rating_id = r.rating_id " +
             "LEFT JOIN FILM_GENRE fg ON f.FILM_ID = fg.FILM_ID " +
@@ -68,6 +68,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "DELETE FROM FILM_LIKE where film_id = ? AND user_id = ?";
     private static final String ADD_MULTIPLE_GENRES_QUERY =
             "INSERT INTO FILM_GENRE(film_id, genre_id) VALUES (?, ?)";
+    private static final String DELETE_FILM_QUERY =
+            "DELETE FROM FILM WHERE film_id = ?";
     private final RowMapper<Genre> genreRowMapper;
     private final RowMapper<Mpa> mpaRowMapper;
 
@@ -197,6 +199,12 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         return groupValues(rawFilms).stream()
                 .sorted(Comparator.comparing(Film::getLikesCount).reversed())
                 .toList();
+    }
+
+    @Override
+    public boolean deleteFilmById(int filmId) {
+        int rowsAffected = jdbc.update(DELETE_FILM_QUERY, filmId);
+        return rowsAffected > 0;
     }
 
     private List<Film> groupValues(List<Film> rawFilms) {

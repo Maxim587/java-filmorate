@@ -148,4 +148,13 @@ public class UserService {
                 .map(UserMapper::mapToUserDto)
                 .toList();
     }
+
+    public boolean deleteUserById(int userId) {
+        boolean deleted = userStorage.deleteUserById(userId);
+        if (!deleted) {
+            throw new NotFoundException("Фильм с id=" + userId + " не найден");
+        }
+        return true;
+    }
+
 }

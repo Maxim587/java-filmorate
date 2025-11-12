@@ -54,6 +54,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
             "LEFT JOIN FRIENDSHIP f2 ON u.USER_ID = f2.USER_ID left JOIN FRIENDSHIP_STATUS fs ON f2.FRIENDSHIP_STATUS_ID = fs.FRIENDSHIP_STATUS_ID " +
             "WHERE f1.USER_ID = ? " +
             "ORDER BY u.USER_ID";
+    private static final String DELETE_USER_QUERY = "DELETE FROM USERS WHERE user_id = ?";
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
@@ -152,4 +153,11 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
         return findManyByParamList(FIND_USERS_BY_IDS_QUERY, userIds, mapper);
     }
+
+    @Override
+    public boolean deleteUserById(int userId) {
+        int rowsAffected = jdbc.update(DELETE_USER_QUERY, userId);
+        return rowsAffected > 0;
+    }
+
 }
