@@ -27,20 +27,20 @@ public class DirectorDbStorage implements DirectorStorage {
 
     @Override
     public List<Director> getAllDirectors() {
-        String sql = "SELECT * FROM director ORDER BY director_id";
+        String sql = "SELECT * FROM directors ORDER BY director_id";
         return jdbcTemplate.query(sql, directorRowMapper);
     }
 
     @Override
     public Optional<Director> getDirectorById(int id) {
-        String sql = "SELECT * FROM director WHERE director_id = ?";
+        String sql = "SELECT * FROM directors WHERE director_id = ?";
         List<Director> directors = jdbcTemplate.query(sql, directorRowMapper, id);
         return directors.isEmpty() ? Optional.empty() : Optional.of(directors.get(0));
     }
 
     @Override
     public Director createDirector(Director director) {
-        String sql = "INSERT INTO director (name) VALUES (?)";
+        String sql = "INSERT INTO directors (name) VALUES (?)";
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
 
         jdbcTemplate.update(connection -> {
@@ -49,20 +49,34 @@ public class DirectorDbStorage implements DirectorStorage {
             return ps;
         }, keyHolder);
 
-        director.setId(keyHolder.getKeyAs(Integer.class));
+        Integer id = keyHolder.getKeyAs(Integer.class);
+        if (id != null) {
+            director.setId(id);
+        }
         return director;
     }
 
     @Override
     public Director updateDirector(Director director) {
-        String sql = "UPDATE director SET name = ? WHERE director_id = ?";
-        jdbcTemplate.update(sql, director.getName(), director.getId());
+        String sql = "UPDATE directors SET name = ? WHERE director_id = ?";
+        int rowsUpdated = jdbcTemplate.update(sql, director.getName(), director.getId());
+
+        if (rowsUpdated == 0) {
+            throw new ru.yandex.practicum.filmorate.exception.NotFoundException(
+                    "Режиссёр с id:" + director.getId() + " не найден");
+        }
+
         return director;
     }
 
     @Override
     public void deleteDirector(int id) {
-        String sql = "DELETE FROM director WHERE director_id = ?";
-        jdbcTemplate.update(sql, id);
+        String sql = "DELETE FROM directors WHERE director_id = ?";
+        int rowsDeleted = jdbcTemplate.update(sql, id);
+
+        if (rowsDeleted == 0) {
+            throw new ru.yandex.practicum.filmorate.exception.NotFoundException(
+                    "Режиссёр с id:" + id + " не найден");
+        }
     }
 }

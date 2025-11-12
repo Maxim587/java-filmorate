@@ -24,7 +24,7 @@ public class DirectorService {
 
     public Director getDirectorById(int id) {
         return directorStorage.getDirectorById(id)
-                .orElseThrow(() -> new NotFoundException("Режиссер с id:" + id + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Режиссёр с id:" + id + " не найден"));
     }
 
     public Director createDirector(NewDirectorDto newDirectorDto) {
@@ -34,13 +34,21 @@ public class DirectorService {
     }
 
     public Director updateDirector(UpdateDirectorDto updateDirectorDto) {
-        Director existingDirector = getDirectorById(updateDirectorDto.getId());
-        existingDirector.setName(updateDirectorDto.getName());
-        return directorStorage.updateDirector(existingDirector);
+        // Проверяем существование режиссёра перед обновлением
+        directorStorage.getDirectorById(updateDirectorDto.getId())
+                .orElseThrow(() -> new NotFoundException("Режиссёр с id:" + updateDirectorDto.getId() + " не найден"));
+
+        Director director = new Director();
+        director.setId(updateDirectorDto.getId());
+        director.setName(updateDirectorDto.getName());
+        return directorStorage.updateDirector(director);
     }
 
     public void deleteDirector(int id) {
-        getDirectorById(id); // Проверка существования
+        // Проверяем существование режиссёра перед удалением
+        directorStorage.getDirectorById(id)
+                .orElseThrow(() -> new NotFoundException("Режиссёр с id:" + id + " не найден"));
+
         directorStorage.deleteDirector(id);
     }
 }
