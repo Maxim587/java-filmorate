@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.database;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -12,6 +13,7 @@ import java.sql.Statement;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 abstract class BaseDbStorage<T> {
@@ -58,6 +60,15 @@ abstract class BaseDbStorage<T> {
         int rowsUpdated = jdbc.update(query, params);
         if (rowsUpdated == 0) {
             throw new InternalServerException("Не удалось обновить данные");
+        }
+    }
+
+    protected Optional<T> findOne(String query, Object... params) {
+        try {
+            T result = jdbc.queryForObject(query, mapper, params);
+            return Optional.ofNullable(result);
+        } catch (EmptyResultDataAccessException ignored) {
+            return Optional.empty();
         }
     }
 }

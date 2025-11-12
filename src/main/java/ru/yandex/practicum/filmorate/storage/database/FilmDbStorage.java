@@ -39,7 +39,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String INSERT_FILM_QUERY = "INSERT INTO FILM(name, description, release_date, duration, rating_id) " +
             "VALUES (?, ?, ?, ?, ?)";
     private static final String UPDATE_QUERY = "UPDATE FILM " +
-            "SET name = ?, description = ?, release_date = ?, duration = ?, rating_id = ?";
+            "SET name = ?, description = ?, release_date = ?, duration = ?, rating_id = ? " +
+            "WHERE FILM_ID = ?";
     private static final String MOST_POPULAR_FILMS_QUERY = "SELECT " +
             "f.FILM_ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, f.RATING_ID, r.NAME as RATING_NAME, g.GENRE_ID, g.NAME AS GENRE, fl.USER_ID AS \"LIKE\" " +
             "FROM FILM f JOIN " +
@@ -122,7 +123,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 newFilm.getDescription(),
                 Date.valueOf(newFilm.getReleaseDate()),
                 newFilm.getDuration(),
-                newFilm.getMpa().getId()
+                newFilm.getMpa().getId(),
+                newFilm.getId()
         );
 
         delete(DELETE_FILM_GENRES_QUERY, newFilm.getId());
