@@ -154,6 +154,29 @@ public class FilmService {
                 .toList();
     }
 
+    public List<FilmDto> searchFilms(String query, String by) {
+        String[] searchBy = by.split(",");
+        boolean searchByTitle = false;
+        boolean searchByDirector = false;
+
+        for (String param : searchBy) {
+            if ("title".equals(param.trim())) {
+                searchByTitle = true;
+            } else if ("director".equals(param.trim())) {
+                searchByDirector = true;
+            }
+        }
+
+        if (!searchByTitle && !searchByDirector) {
+            throw new ValidationException("Параметр 'by' должен содержать 'title' и/или 'director'");
+        }
+
+        List<Film> films = filmStorage.searchFilms(query, searchByTitle, searchByDirector);
+        return films.stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
     private Set<Genre> mapFilmGenres(Set<GenreRequestDto> filmRequestGenres) {
         Map<Integer, Genre> genresFromDb = filmStorage.getAllGenres().stream()
                 .collect(Collectors.toMap(Genre::getId, Function.identity()));

@@ -32,4 +32,6 @@ public interface FilmStorage {
     boolean deleteFilmById(int filmId);
 
     List<Film> getMostPopular(int count);
+
+    List<Film> searchFilms(String query, boolean searchByTitle, boolean searchByDirector);
 }

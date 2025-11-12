@@ -39,6 +39,13 @@ public class FilmController {
         return filmService.getMostPopular(count);
     }
 
+    @GetMapping("/search")
+    public List<FilmDto> searchFilms(@RequestParam String query,
+                                     @RequestParam(defaultValue = "title,director") String by) {
+        log.info("Start searching films with query: {}, by: {}", query, by);
+        return filmService.searchFilms(query, by);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public FilmDto create(@Valid @RequestBody NewFilmDto newFilmDto) {

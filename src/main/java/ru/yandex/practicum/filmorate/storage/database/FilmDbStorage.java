@@ -225,4 +225,42 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         }
         return films.values().stream().toList();
     }
+
+    @Override
+    public List<Film> searchFilms(String query, boolean searchByTitle, boolean searchByDirector) {
+        String searchQuery = buildSearchQuery(searchByTitle, searchByDirector);
+        String searchPattern = "%" + query.toLowerCase() + "%";
+
+        if (searchByTitle && searchByDirector) {
+            return jdbc.query(searchQuery, mapper, searchPattern, searchPattern);
+        } else {
+            return jdbc.query(searchQuery, mapper, searchPattern);
+        }
+    }
+
+    private String buildSearchQuery(boolean searchByTitle, boolean searchByDirector) {
+        String baseQuery = "SELECT DISTINCT f.FILM_ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, " +
+                "f.RATING_ID, r.NAME as RATING_NAME, g.GENRE_ID, g.NAME AS GENRE, fl.USER_ID AS \"LIKE\" " +
+                "FROM FILM f " +
+                "LEFT JOIN RATING r ON f.rating_id = r.rating_id " +
+                "LEFT JOIN FILM_GENRE fg ON f.FILM_ID = fg.FILM_ID " +
+                "LEFT JOIN GENRE g ON fg.GENRE_ID = g.GENRE_ID " +
+                "LEFT JOIN FILM_LIKE fl ON f.FILM_ID = fl.FILM_ID ";
+
+        if (searchByTitle && searchByDirector) {
+            baseQuery += "LEFT JOIN FILM_DIRECTOR fd ON f.FILM_ID = fd.FILM_ID " +
+                    "LEFT JOIN DIRECTORS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID " +
+                    "WHERE (LOWER(f.name) LIKE LOWER(?) OR LOWER(d.name) LIKE LOWER(?)) ";
+        } else if (searchByTitle) {
+            baseQuery += "WHERE LOWER(f.name) LIKE LOWER(?) ";
+        } else if (searchByDirector) {
+            baseQuery += "LEFT JOIN FILM_DIRECTOR fd ON f.FILM_ID = fd.FILM_ID " +
+                    "LEFT JOIN DIRECTORS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID " +
+                    "WHERE LOWER(d.name) LIKE LOWER(?) ";
+        }
+
+        baseQuery += "ORDER BY (SELECT COUNT(*) FROM FILM_LIKE fl2 WHERE fl2.FILM_ID = f.FILM_ID) DESC";
+
+        return baseQuery;
+    }
 }
