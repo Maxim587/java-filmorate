@@ -12,10 +12,7 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.database.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.database.UserDbStorage;
-import ru.yandex.practicum.filmorate.storage.database.mapper.FilmRowMapper;
-import ru.yandex.practicum.filmorate.storage.database.mapper.GenreRowMapper;
-import ru.yandex.practicum.filmorate.storage.database.mapper.MpaRowMapper;
-import ru.yandex.practicum.filmorate.storage.database.mapper.UserRowMapper;
+import ru.yandex.practicum.filmorate.storage.database.mapper.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -26,7 +23,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 @JdbcTest
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-@Import({FilmDbStorage.class, UserDbStorage.class, UserRowMapper.class, FilmRowMapper.class, GenreRowMapper.class, MpaRowMapper.class})
+@Import({
+        FilmDbStorage.class,
+        UserDbStorage.class,
+        UserRowMapper.class,
+        FilmRowMapper.class,
+        GenreRowMapper.class,
+        MpaRowMapper.class,
+        DirectorRowMapper.class
+})
 public class FilmIntegrationTests {
     private final FilmDbStorage filmDbStorage;
     private final UserDbStorage userDbStorage;

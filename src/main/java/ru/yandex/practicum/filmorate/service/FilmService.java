@@ -10,12 +10,11 @@ import ru.yandex.practicum.filmorate.dto.film.UpdateFilmDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.*;
+import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.dto.DirectorRequestDto;
 
 import java.util.*;
 import java.util.function.Function;
@@ -28,6 +27,7 @@ import java.util.stream.Collectors;
 public class FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+    private final DirectorStorage directorStorage;
 
     public FilmDto createFilm(NewFilmDto newFilmDto) {
         Mpa mpa = Optional.ofNullable(filmStorage.getRatingById(newFilmDto.getMpa().getId()))
@@ -39,8 +39,14 @@ public class FilmService {
         Film film = FilmMapper.mapToFilm(newFilmDto);
         film.setMpa(mpa);
 
+        // Обрабатываем жанры
         if (newFilmDto.getGenres() != null && !newFilmDto.getGenres().isEmpty()) {
             film.setGenres(mapFilmGenres(newFilmDto.getGenres()));
+        }
+
+        // Обрабатываем режиссёров
+        if (newFilmDto.getDirectors() != null && !newFilmDto.getDirectors().isEmpty()) {
+            film.setDirectors(mapFilmDirectors(newFilmDto.getDirectors()));
         }
 
         return FilmMapper.mapToFilmDto(filmStorage.createFilm(film));
@@ -83,11 +89,48 @@ public class FilmService {
 
         FilmMapper.updateFilmFields(filmToUpdate, newFilm);
 
+        // Обновляем жанры
         if (newFilm.getGenres() != null && !newFilm.getGenres().isEmpty()) {
             filmToUpdate.setGenres(mapFilmGenres(newFilm.getGenres()));
+        } else {
+            filmToUpdate.setGenres(new HashSet<>());
+        }
+
+        // Обновляем режиссёров
+        if (newFilm.getDirectors() != null && !newFilm.getDirectors().isEmpty()) {
+            filmToUpdate.setDirectors(mapFilmDirectors(newFilm.getDirectors()));
+        } else {
+            filmToUpdate.setDirectors(new HashSet<>());
         }
 
         return FilmMapper.mapToFilmDto(filmStorage.updateFilm(filmToUpdate));
+    }
+
+    // ДОБАВЛЯЕМ НОВЫЙ МЕТОД ДЛЯ ПОЛУЧЕНИЯ ФИЛЬМОВ ПО РЕЖИССЁРУ
+    public List<FilmDto> getFilmsByDirector(int directorId, String sortBy) {
+        // Проверяем существование режиссёра
+        directorStorage.getDirectorById(directorId)
+                .orElseThrow(() -> new NotFoundException("Режиссёр с id:" + directorId + " не найден"));
+
+        if (!"year".equals(sortBy) && !"likes".equals(sortBy)) {
+            throw new ValidationException("Параметр sortBy должен быть 'year' или 'likes'");
+        }
+
+        List<Film> films = filmStorage.getFilmsByDirector(directorId, sortBy);
+        return films.stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
+    // ВСПОМОГАТЕЛЬНЫЙ МЕТОД ДЛЯ МАППИНГА РЕЖИССЁРОВ
+    private Set<Director> mapFilmDirectors(Set<DirectorRequestDto> filmRequestDirectors) {
+        return filmRequestDirectors.stream()
+                .map(directorDto -> directorStorage.getDirectorById(directorDto.getId())
+                        .orElseThrow(() -> {
+                            log.info("Director not exists: {}", directorDto);
+                            return new NotFoundException("Режиссёр не существует id: " + directorDto.getId());
+                        }))
+                .collect(Collectors.toSet());
     }
 
     public List<Genre> getAllGenres() {

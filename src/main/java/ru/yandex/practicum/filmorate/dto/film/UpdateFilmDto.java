@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.dto.film;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import ru.yandex.practicum.filmorate.dto.DirectorRequestDto;
 import ru.yandex.practicum.filmorate.dto.GenreRequestDto;
 import ru.yandex.practicum.filmorate.dto.MpaRequestDto;
 import ru.yandex.practicum.filmorate.validation.ReleaseDateFrom;
@@ -33,4 +34,6 @@ public class UpdateFilmDto {
     private MpaRequestDto mpa;
 
     private Set<GenreRequestDto> genres;
+
+    private Set<DirectorRequestDto> directors;
 }
