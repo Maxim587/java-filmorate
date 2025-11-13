@@ -77,18 +77,11 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                     "JOIN film_director fd ON d.director_id = fd.director_id " +
                     "WHERE fd.film_id = ?";
     private static final String GET_FILMS_BY_DIRECTOR_QUERY =
-            "SELECT f.*, r.name as rating_name, " +
-                    "GROUP_CONCAT(DISTINCT g.genre_id) as genre_ids, " +
-                    "GROUP_CONCAT(DISTINCT g.name) as genre_names, " +
-                    "GROUP_CONCAT(DISTINCT fl.user_id) as likes " +
+            "SELECT DISTINCT f.*, r.name as rating_name " +
                     "FROM film f " +
                     "JOIN rating r ON f.rating_id = r.rating_id " +
                     "JOIN film_director fd ON f.film_id = fd.film_id " +
-                    "LEFT JOIN film_genre fg ON f.film_id = fg.film_id " +
-                    "LEFT JOIN genre g ON fg.genre_id = g.genre_id " +
-                    "LEFT JOIN film_like fl ON f.film_id = fl.film_id " +
-                    "WHERE fd.director_id = ? " +
-                    "GROUP BY f.film_id ";
+                    "WHERE fd.director_id = ?";
     private final RowMapper<Genre> genreRowMapper;
     private final RowMapper<Mpa> mpaRowMapper;
     private RowMapper<Director> directorRowMapper;
@@ -245,7 +238,24 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public void addFilmDirectors(int filmId, Set<Director> directors) {
+        if (directors == null || directors.isEmpty()) {
+            return;
+        }
 
+        List<Director> directorList = new ArrayList<>(directors);
+        jdbc.batchUpdate(ADD_FILM_DIRECTORS_QUERY, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                Director director = directorList.get(i);
+                ps.setInt(1, filmId);
+                ps.setInt(2, director.getId());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return directorList.size();
+            }
+        });
     }
 
     @Override
@@ -255,20 +265,39 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public List<Film> getFilmsByDirector(int directorId, String sortBy) {
-        String query = GET_FILMS_BY_DIRECTOR_QUERY;
+        try {
+            // Простой запрос для получения ID фильмов
+            String filmIdsQuery = "SELECT film_id FROM film_director WHERE director_id = ?";
+            List<Integer> filmIds = jdbc.queryForList(filmIdsQuery, Integer.class, directorId);
 
-        switch (sortBy.toLowerCase()) {
-            case "year":
-                query += " ORDER BY f.release_date";
-                break;
-            case "likes":
-                query += " ORDER BY (SELECT COUNT(*) FROM film_like fl2 WHERE fl2.film_id = f.film_id) DESC";
-                break;
-            default:
-                query += " ORDER BY f.film_id";
+            if (filmIds.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            // Получаем фильмы по одному через getFilmById
+            List<Film> films = new ArrayList<>();
+            for (Integer filmId : filmIds) {
+                Film film = getFilmById(filmId);
+                if (film != null) {
+                    films.add(film);
+                }
+            }
+
+            // Сортируем
+            if ("likes".equals(sortBy)) {
+                films.sort((f1, f2) -> Integer.compare(f2.getLikes().size(), f1.getLikes().size()));
+            } else if ("year".equals(sortBy)) {
+                films.sort(Comparator.comparing(Film::getReleaseDate));
+            }
+
+            return films;
+
+        } catch (Exception e) {
+            // Логируем полную информацию об ошибке
+            System.err.println("ERROR in getFilmsByDirector: " + e.getClass().getName() + ": " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to get films by director", e);
         }
-
-        return jdbc.query(query, mapper, directorId);
     }
 
     @Override
