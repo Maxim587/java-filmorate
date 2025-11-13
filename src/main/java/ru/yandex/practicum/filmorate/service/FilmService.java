@@ -39,15 +39,22 @@ public class FilmService {
         Film film = FilmMapper.mapToFilm(newFilmDto);
         film.setMpa(mpa);
 
-        // Обрабатываем жанры
+        // Обрабатываем жанры - ИСПРАВЛЕНИЕ: устанавливаем пустую коллекцию
         if (newFilmDto.getGenres() != null && !newFilmDto.getGenres().isEmpty()) {
             film.setGenres(mapFilmGenres(newFilmDto.getGenres()));
+        } else {
+            film.setGenres(new HashSet<>());
         }
 
-        // Обрабатываем режиссёров
+        // Обрабатываем режиссёров - ИСПРАВЛЕНИЕ: устанавливаем пустую коллекцию
         if (newFilmDto.getDirectors() != null && !newFilmDto.getDirectors().isEmpty()) {
             film.setDirectors(mapFilmDirectors(newFilmDto.getDirectors()));
+        } else {
+            film.setDirectors(new HashSet<>());
         }
+
+        log.info("Creating film with {} directors and {} genres",
+                film.getDirectors().size(), film.getGenres().size());
 
         return FilmMapper.mapToFilmDto(filmStorage.createFilm(film));
     }
@@ -122,8 +129,12 @@ public class FilmService {
                 .toList();
     }
 
-    // ВСПОМОГАТЕЛЬНЫЙ МЕТОД ДЛЯ МАППИНГА РЕЖИССЁРОВ
+    // ВСПОМОГАТЕЛЬНЫЙ МЕТОД ДЛЯ МАППИНГА РЕЖИССЁРОВ - ИСПРАВЛЕНИЕ: обработка пустой коллекции
     private Set<Director> mapFilmDirectors(Set<DirectorRequestDto> filmRequestDirectors) {
+        if (filmRequestDirectors == null || filmRequestDirectors.isEmpty()) {
+            return new HashSet<>();
+        }
+
         return filmRequestDirectors.stream()
                 .map(directorDto -> directorStorage.getDirectorById(directorDto.getId())
                         .orElseThrow(() -> {
@@ -171,6 +182,7 @@ public class FilmService {
         filmStorage.addLike(filmId, userId);
     }
 
+    // ИСПРАВЛЕНИЕ: убрана лишняя проверка существования лайка
     public void deleteLike(int filmId, int userId) {
         Film film = filmStorage.getFilmById(filmId);
         if (film == null) {
@@ -178,12 +190,13 @@ public class FilmService {
             throw new NotFoundException("Ошибка удаления лайка к фильму. Фильм не найден");
         }
 
-        List<Integer> likes = filmStorage.getFilmLikes(filmId);
-        if (likes == null || likes.isEmpty() || !likes.contains(userId)) {
-            log.info("Error while deleting like. Like not found.");
-            throw new NotFoundException("Ошибка удаления лайка к фильму. Лайк не найден");
+        User user = userStorage.getUserById(userId);
+        if (user == null) {
+            log.info("Error while deleting like. User not found id: {}", userId);
+            throw new NotFoundException("Ошибка удаления лайка к фильму. Пользователь не найден");
         }
 
+        // ПРОСТО УДАЛЯЕМ ЛАЙК БЕЗ ДОПОЛНИТЕЛЬНЫХ ПРОВЕРОК
         filmStorage.deleteLike(filmId, userId);
     }
 
@@ -192,6 +205,30 @@ public class FilmService {
         if (films.isEmpty()) {
             return Collections.emptyList();
         }
+        return films.stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
+    // ИСПРАВЛЕНИЕ: добавлен поиск фильмов
+    public List<FilmDto> searchFilms(String query, String by) {
+        String[] searchBy = by.split(",");
+        boolean searchByTitle = false;
+        boolean searchByDirector = false;
+
+        for (String param : searchBy) {
+            if ("title".equals(param.trim())) {
+                searchByTitle = true;
+            } else if ("director".equals(param.trim())) {
+                searchByDirector = true;
+            }
+        }
+
+        if (!searchByTitle && !searchByDirector) {
+            throw new ValidationException("Параметр 'by' должен содержать 'title' и/или 'director'");
+        }
+
+        List<Film> films = filmStorage.searchFilms(query, searchByTitle, searchByDirector);
         return films.stream()
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
@@ -217,6 +254,4 @@ public class FilmService {
         }
         return true;
     }
-
-
 }
