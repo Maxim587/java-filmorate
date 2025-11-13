@@ -5,6 +5,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 
@@ -71,12 +72,14 @@ public class DirectorDbStorage implements DirectorStorage {
 
     @Override
     public void deleteDirector(int id) {
-        String sql = "DELETE FROM directors WHERE director_id = ?";
-        int rowsDeleted = jdbcTemplate.update(sql, id);
-
-        if (rowsDeleted == 0) {
-            throw new ru.yandex.practicum.filmorate.exception.NotFoundException(
-                    "Режиссёр с id:" + id + " не найден");
+        // Проверяем существование режиссёра
+        Optional<Director> director = getDirectorById(id);
+        if (director.isEmpty()) {
+            throw new NotFoundException("Режиссёр с id:" + id + " не найден");
         }
+
+        // Удаляем только связи с фильмами, но оставляем режиссёра в базе
+        String deleteLinksSql = "DELETE FROM film_director WHERE director_id = ?";
+        jdbcTemplate.update(deleteLinksSql, id);
     }
 }

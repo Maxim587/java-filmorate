@@ -90,6 +90,6 @@ ALTER TABLE friendship ADD FOREIGN KEY (friendship_status_id) REFERENCES FRIENDS
 
 ALTER TABLE film_director ADD FOREIGN KEY (film_id) REFERENCES film (film_id) ON DELETE CASCADE;
 
-ALTER TABLE film_director ADD FOREIGN KEY (director_id) REFERENCES directors (director_id) ON DELETE CASCADE;
+ALTER TABLE film_director ADD FOREIGN KEY (director_id) REFERENCES directors (director_id) ON DELETE RESTRICT;
 
 CREATE INDEX IF NOT EXISTS IDX_FRIENDSHIP ON FRIENDSHIP(user_id, friend_id);
