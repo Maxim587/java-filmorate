@@ -32,4 +32,6 @@ public interface FilmStorage {
     boolean deleteFilmById(int filmId);
 
     List<Film> getMostPopular(int count);
+
+    List<Film> getPopularFilmsByGenreAndYear(Integer count, Integer genreId, Integer year);
 }
