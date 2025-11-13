@@ -70,6 +70,27 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "INSERT INTO FILM_GENRE(film_id, genre_id) VALUES (?, ?)";
     private static final String DELETE_FILM_QUERY =
             "DELETE FROM FILM WHERE film_id = ?";
+    private static final String COMMON_FILMS_QUERY = """
+            SELECT
+                f.FILM_ID,
+                f.NAME,
+                f.DESCRIPTION,
+                f.RELEASE_DATE,
+                f.DURATION,
+                f.RATING_ID,
+                r.NAME as RATING_NAME,
+                g.GENRE_ID,
+                g.NAME AS GENRE,
+                fl.USER_ID AS "LIKE"
+            FROM FILM f
+            JOIN FILM_LIKE fl1 ON f.FILM_ID = fl1.FILM_ID AND fl1.USER_ID = ?
+            JOIN FILM_LIKE fl2 ON f.FILM_ID = fl2.FILM_ID AND fl2.USER_ID = ?
+            LEFT JOIN RATING r ON f.RATING_ID = r.RATING_ID
+            LEFT JOIN FILM_GENRE fg ON f.FILM_ID = fg.FILM_ID
+            LEFT JOIN GENRE g ON fg.GENRE_ID = g.GENRE_ID
+            LEFT JOIN FILM_LIKE fl ON f.FILM_ID = fl.FILM_ID
+            ORDER BY (SELECT COUNT(*) FROM FILM_LIKE WHERE FILM_ID = f.FILM_ID) DESC, f.FILM_ID ASC
+            """;
     private final RowMapper<Genre> genreRowMapper;
     private final RowMapper<Mpa> mpaRowMapper;
 
@@ -205,6 +226,15 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     public boolean deleteFilmById(int filmId) {
         int rowsAffected = jdbc.update(DELETE_FILM_QUERY, filmId);
         return rowsAffected > 0;
+    }
+
+    @Override
+    public List<Film> getCommonFilms(int userId, int friendId) {
+        List<Film> rawFilms = findMany(COMMON_FILMS_QUERY, userId, friendId);
+        if (rawFilms.isEmpty()) {
+            return rawFilms;
+        }
+        return groupValues(rawFilms);
     }
 
     private List<Film> groupValues(List<Film> rawFilms) {
