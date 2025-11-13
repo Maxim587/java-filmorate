@@ -178,10 +178,10 @@ public class FilmService {
             throw new NotFoundException("Ошибка удаления лайка к фильму. Фильм не найден");
         }
 
-        List<Integer> likes = filmStorage.getFilmLikes(filmId);
-        if (likes == null || likes.isEmpty() || !likes.contains(userId)) {
-            log.info("Error while deleting like. Like not found.");
-            throw new NotFoundException("Ошибка удаления лайка к фильму. Лайк не найден");
+        User user = userStorage.getUserById(userId);
+        if (user == null) {
+            log.info("Error while deleting like. User not found id: {}", userId);
+            throw new NotFoundException("Ошибка удаления лайка к фильму. Пользователь не найден");
         }
 
         filmStorage.deleteLike(filmId, userId);
