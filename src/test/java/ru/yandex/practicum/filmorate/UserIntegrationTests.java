@@ -1,11 +1,13 @@
 package ru.yandex.practicum.filmorate;
 
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.FriendshipStatus;
@@ -26,6 +28,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Import({UserDbStorage.class, UserRowMapper.class})
 public class UserIntegrationTests {
     private final UserDbStorage userDbStorage;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @BeforeEach
+    void setUp() {
+        // Очищаем только таблицы, которые используются в тестах пользователей
+        jdbcTemplate.update("DELETE FROM FRIENDSHIP");
+        jdbcTemplate.update("DELETE FROM USERS");
+        jdbcTemplate.update("DELETE FROM FRIENDSHIP_STATUS");
+
+        // Вставляем только необходимые для тестов пользователей справочные данные
+        jdbcTemplate.update("INSERT INTO FRIENDSHIP_STATUS (FRIENDSHIP_STATUS_ID, STATUS) VALUES (1, 'CONFIRMED')");
+        jdbcTemplate.update("INSERT INTO FRIENDSHIP_STATUS (FRIENDSHIP_STATUS_ID, STATUS) VALUES (2, 'NOT_CONFIRMED')");
+    }
 
     @Test
     public void createFilm() {
