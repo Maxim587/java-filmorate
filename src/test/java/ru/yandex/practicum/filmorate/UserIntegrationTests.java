@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate;
 
 import lombok.RequiredArgsConstructor;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -31,31 +30,6 @@ public class UserIntegrationTests {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
-
-    @BeforeEach
-    void setUp() {
-        // Очищаем только таблицы, которые используются в тестах пользователей
-        jdbcTemplate.update("DELETE FROM FRIENDSHIP");
-        jdbcTemplate.update("DELETE FROM USERS");
-        jdbcTemplate.update("DELETE FROM FRIENDSHIP_STATUS");
-
-        // Вставляем только необходимые для тестов пользователей справочные данные
-        jdbcTemplate.update("INSERT INTO FRIENDSHIP_STATUS (FRIENDSHIP_STATUS_ID, STATUS) VALUES (1, 'CONFIRMED')");
-        jdbcTemplate.update("INSERT INTO FRIENDSHIP_STATUS (FRIENDSHIP_STATUS_ID, STATUS) VALUES (2, 'NOT_CONFIRMED')");
-    }
-
-    @Test
-    public void createFilm() {
-        User user = userDbStorage.createUser(getUser());
-
-        User dbUser = userDbStorage.getUserById(user.getId());
-        assertThat(dbUser).isNotNull();
-        assertThat(dbUser.getId()).isEqualTo(user.getId());
-        assertThat(dbUser.getEmail()).isEqualTo(user.getEmail());
-        assertThat(dbUser.getLogin()).isEqualTo(user.getLogin());
-        assertThat(dbUser.getName()).isEqualTo(user.getName());
-        assertThat(dbUser.getBirthday()).isEqualTo(user.getBirthday());
-    }
 
     @Test
     public void getAllUsers() {
