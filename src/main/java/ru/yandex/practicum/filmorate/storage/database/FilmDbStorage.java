@@ -10,14 +10,12 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.model.Director;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Primary
 @Repository
@@ -70,13 +68,31 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "INSERT INTO FILM_GENRE(film_id, genre_id) VALUES (?, ?)";
     private static final String DELETE_FILM_QUERY =
             "DELETE FROM FILM WHERE film_id = ?";
+    private static final String ADD_FILM_DIRECTORS_QUERY =
+            "INSERT INTO film_director(film_id, director_id) VALUES (?, ?)";
+    private static final String DELETE_FILM_DIRECTORS_QUERY =
+            "DELETE FROM film_director WHERE film_id = ?";
+    private static final String GET_FILM_DIRECTORS_QUERY =
+            "SELECT d.* FROM directors d " +
+                    "JOIN film_director fd ON d.director_id = fd.director_id " +
+                    "WHERE fd.film_id = ?";
+    private static final String GET_FILMS_BY_DIRECTOR_QUERY =
+            "SELECT DISTINCT f.*, r.name as rating_name " +
+                    "FROM film f " +
+                    "JOIN rating r ON f.rating_id = r.rating_id " +
+                    "JOIN film_director fd ON f.film_id = fd.film_id " +
+                    "WHERE fd.director_id = ?";
     private final RowMapper<Genre> genreRowMapper;
     private final RowMapper<Mpa> mpaRowMapper;
+    private RowMapper<Director> directorRowMapper;
 
-    public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper, RowMapper<Genre> genreRowMapper, RowMapper<Mpa> mpaRowMapper) {
+    public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper,
+                         RowMapper<Genre> genreRowMapper, RowMapper<Mpa> mpaRowMapper,
+                         RowMapper<Director> directorRowMapper) {
         super(jdbc, mapper);
         this.genreRowMapper = genreRowMapper;
         this.mpaRowMapper = mpaRowMapper;
+        this.directorRowMapper = directorRowMapper;
     }
 
     @Override
@@ -91,18 +107,26 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         );
         film.setId(id);
 
+        // Добавляем жанры
         addFilmGenres(id, film.getGenres().stream().toList());
+
+        // Добавляем режиссёров
+        addFilmDirectors(id, film.getDirectors());
 
         return film;
     }
 
     @Override
     public List<Film> getAllFilms() {
-        List<Film> rawFilms = findMany(FIND_ALL_FILMS_QUERY);
-        if (rawFilms.isEmpty()) {
-            return rawFilms;
+        List<Film> films = groupValues(findMany(FIND_ALL_FILMS_QUERY));
+
+        // Загружаем режиссёров для каждого фильма
+        for (Film film : films) {
+            List<Director> directors = getFilmDirectors(film.getId());
+            film.setDirectors(new HashSet<>(directors));
         }
-        return groupValues(rawFilms);
+
+        return films;
     }
 
     @Override
@@ -111,7 +135,13 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         if (rawFilms.isEmpty()) {
             return null;
         }
-        return groupValues(rawFilms).getFirst();
+        Film film = groupValues(rawFilms).getFirst();
+
+        // Загружаем режиссёров для фильма
+        List<Director> directors = getFilmDirectors(filmId);
+        film.setDirectors(new HashSet<>(directors));
+
+        return film;
     }
 
     @Override
@@ -125,8 +155,13 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 newFilm.getMpa().getId()
         );
 
+        // Обновляем жанры
         delete(DELETE_FILM_GENRES_QUERY, newFilm.getId());
         addFilmGenres(newFilm.getId(), newFilm.getGenres().stream().toList());
+
+        // Обновляем режиссёров
+        deleteFilmDirectors(newFilm.getId());
+        addFilmDirectors(newFilm.getId(), newFilm.getDirectors());
 
         return newFilm;
     }
@@ -199,6 +234,75 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         return groupValues(rawFilms).stream()
                 .sorted(Comparator.comparing(Film::getLikesCount).reversed())
                 .toList();
+    }
+
+    @Override
+    public void addFilmDirectors(int filmId, Set<Director> directors) {
+        if (directors == null || directors.isEmpty()) {
+            return;
+        }
+
+        List<Director> directorList = new ArrayList<>(directors);
+        jdbc.batchUpdate(ADD_FILM_DIRECTORS_QUERY, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                Director director = directorList.get(i);
+                ps.setInt(1, filmId);
+                ps.setInt(2, director.getId());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return directorList.size();
+            }
+        });
+    }
+
+    @Override
+    public void deleteFilmDirectors(int filmId) {
+        jdbc.update(DELETE_FILM_DIRECTORS_QUERY, filmId);
+    }
+
+    @Override
+    public List<Film> getFilmsByDirector(int directorId, String sortBy) {
+        try {
+            // Простой запрос для получения ID фильмов
+            String filmIdsQuery = "SELECT film_id FROM film_director WHERE director_id = ?";
+            List<Integer> filmIds = jdbc.queryForList(filmIdsQuery, Integer.class, directorId);
+
+            if (filmIds.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            // Получаем фильмы по одному через getFilmById
+            List<Film> films = new ArrayList<>();
+            for (Integer filmId : filmIds) {
+                Film film = getFilmById(filmId);
+                if (film != null) {
+                    films.add(film);
+                }
+            }
+
+            // Сортируем
+            if ("likes".equals(sortBy)) {
+                films.sort((f1, f2) -> Integer.compare(f2.getLikes().size(), f1.getLikes().size()));
+            } else if ("year".equals(sortBy)) {
+                films.sort(Comparator.comparing(Film::getReleaseDate));
+            }
+
+            return films;
+
+        } catch (Exception e) {
+            // Логируем полную информацию об ошибке
+            System.err.println("ERROR in getFilmsByDirector: " + e.getClass().getName() + ": " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to get films by director", e);
+        }
+    }
+
+    @Override
+    public List<Director> getFilmDirectors(int filmId) {
+        return jdbc.query(GET_FILM_DIRECTORS_QUERY, directorRowMapper, filmId);
     }
 
     @Override

@@ -39,6 +39,13 @@ public class FilmController {
         return filmService.getMostPopular(count);
     }
 
+    @GetMapping("/director/{directorId}")
+    public List<FilmDto> getFilmsByDirector(@PathVariable int directorId,
+                                            @RequestParam(defaultValue = "year") String sortBy) {
+        log.info("Start getting films by director id: {} sorted by {}", directorId, sortBy);
+        return filmService.getFilmsByDirector(directorId, sortBy);
+    }
+
     @GetMapping("/search")
     public List<FilmDto> searchFilms(@RequestParam String query,
                                      @RequestParam(defaultValue = "title,director") String by) {
