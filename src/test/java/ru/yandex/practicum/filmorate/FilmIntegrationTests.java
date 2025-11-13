@@ -180,5 +180,63 @@ public class FilmIntegrationTests {
         return user;
     }
 
+    @Test
+    public void getCommonFilms() {
+        Film film1 = filmDbStorage.createFilm(prepareFilms().getFirst());
+        Film film2 = filmDbStorage.createFilm(prepareFilms().getLast());
+        Film film3 = filmDbStorage.createFilm(prepareFilms().getFirst());
+        Film film4 = filmDbStorage.createFilm(prepareFilms().getLast());
+
+        User user1 = userDbStorage.createUser(prepareUser());
+        User user2 = userDbStorage.createUser(prepareUser());
+        User user3 = userDbStorage.createUser(prepareUser());
+
+        filmDbStorage.addLike(film1.getId(), user1.getId());
+        filmDbStorage.addLike(film2.getId(), user1.getId());
+        filmDbStorage.addLike(film3.getId(), user1.getId());
+
+        filmDbStorage.addLike(film2.getId(), user2.getId());
+        filmDbStorage.addLike(film3.getId(), user2.getId());
+        filmDbStorage.addLike(film4.getId(), user2.getId());
+
+        filmDbStorage.addLike(film3.getId(), user3.getId());
+
+        List<Film> commonFilms = filmDbStorage.getCommonFilms(user1.getId(), user2.getId());
+
+        assertThat(commonFilms).hasSize(2);
+
+        List<Integer> commonFilmIds = commonFilms.stream()
+                .map(Film::getId)
+                .toList();
+
+        assertThat(commonFilmIds).contains(film2.getId(), film3.getId());
+        assertThat(commonFilmIds).doesNotContain(film1.getId(), film4.getId());
+    }
+
+    @Test
+    public void getCommonFilmsWhenNoCommonFilms() {
+        Film film1 = filmDbStorage.createFilm(prepareFilms().getFirst());
+        Film film2 = filmDbStorage.createFilm(prepareFilms().getLast());
+
+        User user1 = userDbStorage.createUser(prepareUser());
+        User user2 = userDbStorage.createUser(prepareUser());
+
+        filmDbStorage.addLike(film1.getId(), user1.getId());
+        filmDbStorage.addLike(film2.getId(), user2.getId());
+
+        List<Film> commonFilms = filmDbStorage.getCommonFilms(user1.getId(), user2.getId());
+
+        assertThat(commonFilms).isEmpty();
+    }
+
+    @Test
+    public void getCommonFilmsWhenNoLikes() {
+        User user1 = userDbStorage.createUser(prepareUser());
+        User user2 = userDbStorage.createUser(prepareUser());
+
+        List<Film> commonFilms = filmDbStorage.getCommonFilms(user1.getId(), user2.getId());
+
+        assertThat(commonFilms).isEmpty();
+    }
 
 }
