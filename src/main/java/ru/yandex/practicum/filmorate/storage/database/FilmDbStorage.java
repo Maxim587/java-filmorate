@@ -6,9 +6,7 @@ import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.sql.Date;
@@ -185,11 +183,13 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public void addLike(int filmId, int userId) {
         update(ADD_LIKE_QUERY, filmId, userId);
+        addFeedEvent(userId, filmId, FeedEntityType.LIKE, FeedEventOperation.ADD);
     }
 
     @Override
     public void deleteLike(int filmId, int userId) {
         update(DELETE_LIKE_QUERY, filmId, userId);
+        addFeedEvent(userId, filmId, FeedEntityType.LIKE, FeedEventOperation.REMOVE);
     }
 
     @Override

@@ -17,7 +17,7 @@ public interface ReviewStorage {
 
     Review updateReview(Review review);
 
-    boolean deleteReview(int reviewId);
+    boolean deleteReview(Review review);
 
     Optional<ReviewReaction> getReviewReaction(int reviewId, int userId);
 

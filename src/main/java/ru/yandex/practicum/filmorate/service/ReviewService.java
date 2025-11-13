@@ -77,12 +77,12 @@ public class ReviewService {
     }
 
     public boolean deleteReview(int reviewId) {
-        reviewStorage.getReviewById(reviewId).orElseThrow(() -> {
+        Review review = reviewStorage.getReviewById(reviewId).orElseThrow(() -> {
             log.info("Review deleting failed: review with id = {} not found", reviewId);
             return new NotFoundException("Отзыв с id = " + reviewId + " не найден");
         });
 
-        return reviewStorage.deleteReview(reviewId);
+        return reviewStorage.deleteReview(review);
     }
 
     //добавление лайка/дизлайка к отзыву

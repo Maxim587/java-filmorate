@@ -112,7 +112,7 @@ public class ReviewsTests {
     @Test
     public void deleteReview() {
         Review review = reviewDbStorage.createReview(review0);
-        boolean deleted = reviewDbStorage.deleteReview(review.getReviewId());
+        boolean deleted = reviewDbStorage.deleteReview(review);
 
         assertThat(deleted).isTrue();
         assertThat(reviewDbStorage.getReviewById(review.getReviewId()).isEmpty()).isTrue();

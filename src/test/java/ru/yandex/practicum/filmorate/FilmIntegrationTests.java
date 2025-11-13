@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
+import ru.yandex.practicum.filmorate.dto.user.FeedDto;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -150,6 +151,32 @@ public class FilmIntegrationTests {
         assertThat(filmDbStorage.getFilmById(filmId)).isNull();
     }
 
+    @Test
+    public void userFeedOnFilmLikes() {
+        User user = prepareUser();
+        User dbUser = userDbStorage.createUser(user);
+        Film dbFilm = filmDbStorage.createFilm(prepareFilms().getFirst());
+
+        //событие на добавление лайка фильму
+        filmDbStorage.addLike(dbFilm.getId(), dbUser.getId());
+        List<FeedDto> feed = userDbStorage.getUserFeed(dbUser.getId());
+        assertThat(feed).hasSize(1);
+        FeedDto feedDto = feed.getFirst();
+        assertThat(feedDto.getUserId()).isEqualTo(dbUser.getId());
+        assertThat(feedDto.getEntityId()).isEqualTo(dbFilm.getId());
+        assertThat(feedDto.getOperation()).isEqualTo("ADD");
+        assertThat(feedDto.getEventType()).isEqualTo("LIKE");
+
+        //событие на удаление лайка
+        filmDbStorage.deleteLike(dbFilm.getId(), dbUser.getId());
+        feed = userDbStorage.getUserFeed(dbUser.getId());
+        assertThat(feed).hasSize(2);
+        feedDto = feed.getLast();
+        assertThat(feedDto.getUserId()).isEqualTo(dbUser.getId());
+        assertThat(feedDto.getEntityId()).isEqualTo(dbFilm.getId());
+        assertThat(feedDto.getOperation()).isEqualTo("REMOVE");
+        assertThat(feedDto.getEventType()).isEqualTo("LIKE");
+    }
 
     private List<Film> prepareFilms() {
         Film film = new Film();
@@ -179,6 +206,5 @@ public class FilmIntegrationTests {
         user.setBirthday(LocalDate.of(1990, 1, 1));
         return user;
     }
-
 
 }

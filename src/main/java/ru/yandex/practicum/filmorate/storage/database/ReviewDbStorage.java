@@ -6,6 +6,8 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.model.FeedEntityType;
+import ru.yandex.practicum.filmorate.model.FeedEventOperation;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.model.ReviewReaction;
 import ru.yandex.practicum.filmorate.storage.ReviewStorage;
@@ -73,6 +75,7 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
                 review.getUseful()
         );
         review.setReviewId(id);
+        addFeedEvent(review.getUserId(), review.getReviewId(), FeedEntityType.REVIEW, FeedEventOperation.ADD);
         return review;
     }
 
@@ -99,12 +102,17 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
                 review.isPositive(),
                 review.getReviewId()
         );
+        addFeedEvent(review.getUserId(), review.getReviewId(), FeedEntityType.REVIEW, FeedEventOperation.UPDATE);
         return review;
     }
 
     @Override
-    public boolean deleteReview(int reviewId) {
-        return delete(DELETE_REVIEW_QUERY, reviewId);
+    public boolean deleteReview(Review review) {
+        boolean result = delete(DELETE_REVIEW_QUERY, review.getReviewId());
+        if (result) {
+            addFeedEvent(review.getUserId(), review.getReviewId(), FeedEntityType.REVIEW, FeedEventOperation.REMOVE);
+        }
+        return result;
     }
 
     @Override

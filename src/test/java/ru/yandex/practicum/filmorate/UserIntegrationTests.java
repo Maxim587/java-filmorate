@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
+import ru.yandex.practicum.filmorate.dto.user.FeedDto;
 import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
@@ -113,6 +114,31 @@ public class UserIntegrationTests {
         assertThat(userDbStorage.getUserById(userId)).isNull();
     }
 
+    @Test
+    public void userFeedOnFriends() {
+        User user1 = userDbStorage.createUser(getUser());
+        User user2 = userDbStorage.createUser(getUser());
+
+        //событие на добавление в друзья
+        userDbStorage.addFriend(user1.getId(), user2.getId(), 2);
+        List<FeedDto> feed = userDbStorage.getUserFeed(user1.getId());
+        assertThat(feed).hasSize(1);
+        FeedDto feedDto = feed.getFirst();
+        assertThat(feedDto.getUserId()).isEqualTo(user1.getId());
+        assertThat(feedDto.getEntityId()).isEqualTo(user2.getId());
+        assertThat(feedDto.getOperation()).isEqualTo("ADD");
+        assertThat(feedDto.getEventType()).isEqualTo("FRIEND");
+
+        //событие на удаление из друзей
+        userDbStorage.deleteFriend(user1.getId(), user2.getId());
+        feed = userDbStorage.getUserFeed(user1.getId());
+        assertThat(feed).hasSize(2);
+        feedDto = feed.getLast();
+        assertThat(feedDto.getUserId()).isEqualTo(user1.getId());
+        assertThat(feedDto.getEntityId()).isEqualTo(user2.getId());
+        assertThat(feedDto.getOperation()).isEqualTo("REMOVE");
+        assertThat(feedDto.getEventType()).isEqualTo("FRIEND");
+    }
 
     private User getUser() {
         User user = new User();
