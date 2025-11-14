@@ -39,24 +39,20 @@ public class FilmService {
         Film film = FilmMapper.mapToFilm(newFilmDto);
         film.setMpa(mpa);
 
-        // Обрабатываем жанры - ИСПРАВЛЕНИЕ: устанавливаем пустую коллекцию
+        // Обрабатываем жанры
         if (newFilmDto.getGenres() != null && !newFilmDto.getGenres().isEmpty()) {
             film.setGenres(mapFilmGenres(newFilmDto.getGenres()));
         } else {
             film.setGenres(new HashSet<>());
         }
 
-        // Обрабатываем режиссёров - ИСПРАВЛЕНИЕ: устанавливаем пустую коллекцию
-        if (newFilmDto.getDirectors() != null && !newFilmDto.getDirectors().isEmpty()) {
-            film.setDirectors(mapFilmDirectors(newFilmDto.getDirectors()));
-        } else {
-            film.setDirectors(new HashSet<>());
-        }
+        // ВРЕМЕННО: устанавливаем пустую коллекцию директоров
+        film.setDirectors(new HashSet<>());
 
-        log.info("Creating film with {} directors and {} genres",
-                film.getDirectors().size(), film.getGenres().size());
+        log.info("Creating film with {} genres", film.getGenres().size());
 
-        return FilmMapper.mapToFilmDto(filmStorage.createFilm(film));
+        Film createdFilm = filmStorage.createFilm(film);
+        return FilmMapper.mapToFilmDto(createdFilm);
     }
 
     public List<FilmDto> getAllFilms() {
