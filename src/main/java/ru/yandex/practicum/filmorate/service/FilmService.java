@@ -175,6 +175,16 @@ public class FilmService {
         return true;
     }
 
+    public List<FilmDto> getPopularFilmsByGenreAndYear(Integer count, Integer genreId, Integer year) {
+        List<Film> films = filmStorage.getPopularFilmsByGenreAndYear(count, genreId, year);
+        if (films.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return films.stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
     public List<FilmDto> getCommonFilms(int userId, int friendId) {
         User user = userStorage.getUserById(userId);
         if (user == null) {
