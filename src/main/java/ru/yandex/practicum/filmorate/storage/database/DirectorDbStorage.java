@@ -78,8 +78,12 @@ public class DirectorDbStorage implements DirectorStorage {
             throw new NotFoundException("Режиссёр с id:" + id + " не найден");
         }
 
-        // Удаляем только связи с фильмами, но оставляем режиссёра в базе
+        // Сначала удаляем связи с фильмами
         String deleteLinksSql = "DELETE FROM film_director WHERE director_id = ?";
         jdbcTemplate.update(deleteLinksSql, id);
+
+        // Затем удаляем самого режиссёра
+        String deleteDirectorSql = "DELETE FROM directors WHERE director_id = ?";
+        jdbcTemplate.update(deleteDirectorSql, id);
     }
 }

@@ -304,7 +304,11 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public List<Director> getFilmDirectors(int filmId) {
-        return jdbc.query(GET_FILM_DIRECTORS_QUERY, directorRowMapper, filmId);
+        try {
+            return jdbc.query(GET_FILM_DIRECTORS_QUERY, directorRowMapper, filmId);
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
     }
 
     @Override
