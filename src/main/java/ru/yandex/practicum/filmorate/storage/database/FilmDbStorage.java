@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -297,11 +298,11 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getFilmsByDirector(int directorId, String sortBy) {
-        // Проверяем существование режиссера
+        // Проверяем существование режиссера - ВАЖНО: бросаем исключение если не найден
         String checkDirectorSql = "SELECT COUNT(*) FROM directors WHERE director_id = ?";
         Integer directorCount = jdbc.queryForObject(checkDirectorSql, Integer.class, directorId);
         if (directorCount == null || directorCount == 0) {
-            return Collections.emptyList();
+            throw new NotFoundException("Режиссёр с id:" + directorId + " не найден");
         }
 
         // Базовый запрос для получения фильмов режиссера
@@ -334,7 +335,13 @@ public class FilmDbStorage implements FilmStorage {
 
             Mpa mpa = new Mpa();
             mpa.setId(rs.getInt("RATING_ID"));
-            mpa.setName(rs.getString("RATING_NAME"));
+            String ratingName = rs.getString("RATING_NAME");
+            if (ratingName != null) {
+                mpa.setName(ratingName);
+            } else {
+                // Установите дефолтное значение или выбросьте исключение
+                mpa.setName("Unknown");
+            }
             film.setMpa(mpa);
 
             // Инициализируем коллекции

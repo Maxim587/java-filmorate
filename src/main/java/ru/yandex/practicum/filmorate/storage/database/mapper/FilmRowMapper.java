@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.HashSet;
 
 @Component
@@ -19,22 +20,43 @@ public class FilmRowMapper implements RowMapper<Film> {
         film.setId(rs.getInt("film_id"));
         film.setName(rs.getString("name"));
         film.setDescription(rs.getString("description"));
-        film.setReleaseDate(rs.getDate("release_date").toLocalDate());
-        film.setDuration(rs.getInt("duration"));
-        film.setMpa(new Mpa(rs.getInt("rating_id"), rs.getString("rating_name")));
 
-        int genreId = rs.getInt("genre_id");
-        if (genreId != 0) {
-            film.getGenres().add(new Genre(rs.getInt("genre_id"), rs.getString("genre")));
+        // Безопасное получение даты
+        java.sql.Date releaseDate = rs.getDate("release_date");
+        if (releaseDate != null) {
+            film.setReleaseDate(releaseDate.toLocalDate());
+        } else {
+            film.setReleaseDate(LocalDate.now()); // или другое значение по умолчанию
         }
 
+        film.setDuration(rs.getInt("duration"));
+
+        // Безопасное создание MPA
+        Mpa mpa = new Mpa();
+        mpa.setId(rs.getInt("rating_id"));
+        String ratingName = rs.getString("rating_name");
+        mpa.setName(ratingName != null ? ratingName : "Unknown");
+        film.setMpa(mpa);
+
+        // Безопасное добавление жанров
+        int genreId = rs.getInt("genre_id");
+        if (!rs.wasNull() && genreId != 0) {
+            String genreName = rs.getString("genre");
+            if (genreName != null) {
+                film.getGenres().add(new Genre(genreId, genreName));
+            }
+        }
+
+        // Безопасное добавление лайков
         int like = rs.getInt("like");
-        if (like != 0) {
+        if (!rs.wasNull() && like != 0) {
             film.getLikes().add(like);
         }
 
-        // КРИТИЧЕСКИ ВАЖНО: инициализируем пустую коллекцию directors
-        film.setDirectors(new HashSet<>());
+        // Гарантируем, что коллекции не null
+        if (film.getGenres() == null) film.setGenres(new HashSet<>());
+        if (film.getLikes() == null) film.setLikes(new HashSet<>());
+        if (film.getDirectors() == null) film.setDirectors(new HashSet<>());
 
         return film;
     }

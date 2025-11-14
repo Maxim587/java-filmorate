@@ -14,15 +14,15 @@ import java.util.Set;
 @AllArgsConstructor
 @EqualsAndHashCode(of = {"id"})
 public class Film {
+    private Set<Genre> genres = new HashSet<>();
+    private Set<Integer> likes = new HashSet<>();
+    private Set<Director> directors = new HashSet<>();
     private Integer id;
     private String name;
     private String description;
     private LocalDate releaseDate;
     private int duration;
     private Mpa mpa;
-    private Set<Genre> genres = new HashSet<>();
-    private Set<Integer> likes = new HashSet<>();
-    private Set<Director> directors = new HashSet<>();
 
     public int getLikesCount() {
         return likes.size();
