@@ -12,10 +12,7 @@ import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Primary
 @Repository
@@ -69,6 +66,59 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "INSERT INTO FILM_GENRE(film_id, genre_id) VALUES (?, ?)";
     private static final String DELETE_FILM_QUERY =
             "DELETE FROM FILM WHERE film_id = ?";
+    private static final String POPULAR_FILMS_BY_GENRE_AND_YEAR_QUERY = """
+            SELECT
+                f.FILM_ID,
+                f.NAME,
+                f.DESCRIPTION,
+                f.RELEASE_DATE,
+                f.DURATION,
+                f.RATING_ID,
+                r.NAME as RATING_NAME,
+                g.GENRE_ID,
+                g.NAME AS GENRE,
+                fl.USER_ID AS "LIKE"
+            FROM FILM f
+            JOIN (
+                SELECT f2.FILM_ID, COUNT(DISTINCT fl2.USER_ID) as likes_count
+                FROM FILM f2
+                LEFT JOIN FILM_GENRE fg2 ON f2.FILM_ID = fg2.FILM_ID
+                LEFT JOIN FILM_LIKE fl2 ON f2.FILM_ID = fl2.FILM_ID
+                WHERE (CAST(? AS INT) IS NULL OR fg2.GENRE_ID = CAST(? AS INT))
+                  AND (CAST(? AS INT) IS NULL OR YEAR(f2.RELEASE_DATE) = CAST(? AS INT))
+                GROUP BY f2.FILM_ID
+                ORDER BY COUNT(DISTINCT fl2.USER_ID) DESC, f2.FILM_ID ASC
+                LIMIT ?
+            ) top_films ON f.FILM_ID = top_films.FILM_ID
+            LEFT JOIN RATING r ON f.RATING_ID = r.RATING_ID
+            LEFT JOIN FILM_GENRE fg ON f.FILM_ID = fg.FILM_ID
+            LEFT JOIN GENRE g ON fg.GENRE_ID = g.GENRE_ID
+            LEFT JOIN FILM_LIKE fl ON f.FILM_ID = fl.FILM_ID
+            ORDER BY top_films.likes_count DESC, f.FILM_ID ASC
+            """;
+
+
+    private static final String COMMON_FILMS_QUERY = """
+            SELECT
+                f.FILM_ID,
+                f.NAME,
+                f.DESCRIPTION,
+                f.RELEASE_DATE,
+                f.DURATION,
+                f.RATING_ID,
+                r.NAME as RATING_NAME,
+                g.GENRE_ID,
+                g.NAME AS GENRE,
+                fl.USER_ID AS "LIKE"
+            FROM FILM f
+            JOIN FILM_LIKE fl1 ON f.FILM_ID = fl1.FILM_ID AND fl1.USER_ID = ?
+            JOIN FILM_LIKE fl2 ON f.FILM_ID = fl2.FILM_ID AND fl2.USER_ID = ?
+            LEFT JOIN RATING r ON f.RATING_ID = r.RATING_ID
+            LEFT JOIN FILM_GENRE fg ON f.FILM_ID = fg.FILM_ID
+            LEFT JOIN GENRE g ON fg.GENRE_ID = g.GENRE_ID
+            LEFT JOIN FILM_LIKE fl ON f.FILM_ID = fl.FILM_ID
+            ORDER BY (SELECT COUNT(*) FROM FILM_LIKE WHERE FILM_ID = f.FILM_ID) DESC, f.FILM_ID ASC
+            """;
     private final RowMapper<Genre> genreRowMapper;
     private final RowMapper<Mpa> mpaRowMapper;
 
@@ -209,8 +259,31 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         return rowsAffected > 0;
     }
 
+    @Override
+    public List<Film> getPopularFilmsByGenreAndYear(Integer count, Integer genreId, Integer year) {
+        int limit = (count != null && count > 0) ? count : 10;
+
+        List<Film> rawFilms = findMany(POPULAR_FILMS_BY_GENRE_AND_YEAR_QUERY, genreId, genreId, year, year, limit);
+
+        if (rawFilms.isEmpty()) {
+            return rawFilms;
+        }
+
+        return groupValues(rawFilms);
+    }
+
+
+    @Override
+    public List<Film> getCommonFilms(int userId, int friendId) {
+        List<Film> rawFilms = findMany(COMMON_FILMS_QUERY, userId, friendId);
+        if (rawFilms.isEmpty()) {
+            return rawFilms;
+        }
+        return groupValues(rawFilms);
+    }
+
     private List<Film> groupValues(List<Film> rawFilms) {
-        Map<Integer, Film> films = new HashMap<>();
+        Map<Integer, Film> films = new LinkedHashMap<>();
         for (Film film : rawFilms) {
             films.compute(film.getId(), (id, flm) -> {
                 if (flm == null) {
