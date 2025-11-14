@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.database;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -56,6 +57,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
             "ORDER BY u.USER_ID";
     private static final String DELETE_USER_QUERY = "DELETE FROM USERS WHERE user_id = ?";
 
+    @Autowired
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
     }

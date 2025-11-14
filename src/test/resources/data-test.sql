@@ -16,8 +16,3 @@ MERGE INTO GENRE (genre_id, name) VALUES (6, 'Боевик');
 -- Вставляем статусы дружбы
 MERGE INTO FRIENDSHIP_STATUS (friendship_status_id, status) VALUES (1, 'CONFIRMED');
 MERGE INTO FRIENDSHIP_STATUS (friendship_status_id, status) VALUES (2, 'NOT_CONFIRMED');
-
--- Вставляем режиссеров (опционально для демо данных)
-MERGE INTO directors (DIRECTOR_ID, NAME) VALUES (1, 'Кристофер Нолан');
-MERGE INTO directors (DIRECTOR_ID, NAME) VALUES (2, 'Квентин Тарантино');
-MERGE INTO directors (DIRECTOR_ID, NAME) VALUES (3, 'Стивен Спилберг');

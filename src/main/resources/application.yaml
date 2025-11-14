@@ -5,8 +5,10 @@ spring:
     init:
       mode: always
       platform: h2
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
   datasource:
-    url: jdbc:h2:file:./db/filmorate;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;INIT=CREATE SCHEMA IF NOT EXISTS PUBLIC
+    url: jdbc:h2:file:./db/filmorate;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driverClassName: org.h2.Driver
     username: sa
     password: password

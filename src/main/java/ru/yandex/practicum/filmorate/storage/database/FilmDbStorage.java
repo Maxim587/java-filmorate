@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.database;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
@@ -86,6 +87,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private final RowMapper<Mpa> mpaRowMapper;
     private RowMapper<Director> directorRowMapper;
 
+    @Autowired
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper,
                          RowMapper<Genre> genreRowMapper, RowMapper<Mpa> mpaRowMapper,
                          RowMapper<Director> directorRowMapper) {
