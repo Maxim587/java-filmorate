@@ -81,5 +81,12 @@ public class FilmController {
                 : ResponseEntity.notFound().build();
     }
 
+    @GetMapping("/common")
+    public List<FilmDto> getCommonFilms(
+            @RequestParam int userId,
+            @RequestParam int friendId) {
+        log.info("Start getting common films for userId={} and friendId={}", userId, friendId);
+        return filmService.getCommonFilms(userId, friendId);
+    }
 
 }

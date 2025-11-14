@@ -185,4 +185,27 @@ public class FilmService {
                 .toList();
     }
 
+    public List<FilmDto> getCommonFilms(int userId, int friendId) {
+        User user = userStorage.getUserById(userId);
+        if (user == null) {
+            log.info("Error while getting common films. User not found id: {}", userId);
+            throw new NotFoundException("Пользователь с id:" + userId + " не найден");
+        }
+
+        User friend = userStorage.getUserById(friendId);
+        if (friend == null) {
+            log.info("Error while getting common films. Friend not found id: {}", friendId);
+            throw new NotFoundException("Пользователь с id:" + friendId + " не найден");
+        }
+
+        List<Film> films = filmStorage.getCommonFilms(userId, friendId);
+        if (films.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return films.stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
 }
