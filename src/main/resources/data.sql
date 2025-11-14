@@ -17,8 +17,9 @@ MERGE INTO genre (GENRE_ID, NAME)
     (5, 'Документальный'),
     (6, 'Боевик');
 
-MERGE INTO directors (DIRECTOR_ID, NAME)
-    VALUES (1, 'Кристофер Нолан'),
+MERGE INTO directors (DIRECTOR_ID, NAME) KEY(DIRECTOR_ID)
+    VALUES
+    (1, 'Кристофер Нолан'),
     (2, 'Квентин Тарантино'),
     (3, 'Стивен Спилберг'),
     (4, 'Джеймс Кэмерон'),
@@ -29,14 +30,14 @@ MERGE INTO directors (DIRECTOR_ID, NAME)
     (9, 'Вуди Аллен'),
     (10, 'Алексей Герман');
 
-MERGE INTO film (FILM_ID, NAME, DESCRIPTION, RELEASE_DATE, DURATION, RATING_ID)
+MERGE INTO film (FILM_ID, NAME, DESCRIPTION, RELEASE_DATE, DURATION, RATING_ID) KEY(FILM_ID)
     VALUES (1, 'Начало', 'Фильм о снах', '2010-07-16', 148, 3),
     (2, 'Криминальное чтиво', 'Культовый фильм Тарантино', '1994-05-21', 154, 4),
     (3, 'Парк Юрского периода', 'Динозавры оживают', '1993-06-11', 127, 2),
     (4, 'Титаник', 'История любви на тонущем корабле', '1997-12-19', 195, 3),
     (5, 'Отступники', 'Противостояние полиции и мафии', '2006-09-26', 151, 4);
 
-MERGE INTO film_director (FILM_ID, DIRECTOR_ID)
+MERGE INTO film_director (FILM_ID, DIRECTOR_ID) KEY(FILM_ID, DIRECTOR_ID)
     VALUES (1, 1),
     (2, 2),
     (3, 3),

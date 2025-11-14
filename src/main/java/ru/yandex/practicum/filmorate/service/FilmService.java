@@ -110,9 +110,8 @@ public class FilmService {
         return FilmMapper.mapToFilmDto(filmStorage.updateFilm(filmToUpdate));
     }
 
-    // ДОБАВЛЯЕМ НОВЫЙ МЕТОД ДЛЯ ПОЛУЧЕНИЯ ФИЛЬМОВ ПО РЕЖИССЁРУ
     public List<FilmDto> getFilmsByDirector(int directorId, String sortBy) {
-        // Проверяем существование режиссёра
+        // Проверяем существование режиссёра - ВАЖНО: бросаем NotFoundException если не найден
         directorStorage.getDirectorById(directorId)
                 .orElseThrow(() -> new NotFoundException("Режиссёр с id:" + directorId + " не найден"));
 
@@ -132,12 +131,16 @@ public class FilmService {
         }
 
         return filmRequestDirectors.stream()
-                .filter(Objects::nonNull) // Добавьте эту строку
-                .map(directorDto -> directorStorage.getDirectorById(directorDto.getId())
-                        .orElseThrow(() -> {
-                            log.info("Director not exists: {}", directorDto);
-                            return new NotFoundException("Режиссёр не существует id: " + directorDto.getId());
-                        }))
+                .filter(Objects::nonNull)
+                .map(directorDto -> {
+                    try {
+                        return directorStorage.getDirectorById(directorDto.getId())
+                                .orElseThrow(() -> new NotFoundException("Режиссёр не существует id: " + directorDto.getId()));
+                    } catch (Exception e) {
+                        log.error("Error getting director with id: {}", directorDto.getId(), e);
+                        throw new NotFoundException("Режиссёр не существует id: " + directorDto.getId());
+                    }
+                })
                 .collect(Collectors.toSet());
     }
 

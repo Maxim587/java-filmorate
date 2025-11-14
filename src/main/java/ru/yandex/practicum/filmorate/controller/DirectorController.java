@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.director.NewDirectorDto;
 import ru.yandex.practicum.filmorate.dto.director.UpdateDirectorDto;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.service.DirectorService;
 
@@ -32,14 +31,9 @@ public class DirectorController {
     @GetMapping("/{id}")
     public Director findById(@PathVariable int id) {
         log.info("Start getting director by id {}", id);
-        try {
-            Director director = directorService.getDirectorById(id);
-            log.info("Found director: {}", director);
-            return director;
-        } catch (NotFoundException e) {
-            log.error("Director not found with id: {}", id);
-            throw e;
-        }
+        Director director = directorService.getDirectorById(id);
+        log.info("Found director: {}", director);
+        return director;
     }
 
     @PostMapping

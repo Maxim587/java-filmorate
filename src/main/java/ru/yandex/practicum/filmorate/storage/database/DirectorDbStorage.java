@@ -34,18 +34,6 @@ public class DirectorDbStorage implements DirectorStorage {
 
     @Override
     public Optional<Director> getDirectorById(int id) {
-        // Для тестовых ID всегда возвращаем режиссера
-        if (id == 1 || id == 2) {
-            String checkSql = "SELECT COUNT(*) FROM directors WHERE director_id = ?";
-            Integer count = jdbcTemplate.queryForObject(checkSql, Integer.class, id);
-
-            if (count == null || count == 0) {
-                // Создаем режиссера если его нет
-                String insertSql = "INSERT INTO directors (director_id, name) VALUES (?, ?)";
-                jdbcTemplate.update(insertSql, id, id == 1 ? "Test Director 1" : "Test Director 2");
-            }
-        }
-
         String sql = "SELECT * FROM directors WHERE director_id = ?";
         List<Director> directors = jdbcTemplate.query(sql, directorRowMapper, id);
         return directors.isEmpty() ? Optional.empty() : Optional.of(directors.get(0));
