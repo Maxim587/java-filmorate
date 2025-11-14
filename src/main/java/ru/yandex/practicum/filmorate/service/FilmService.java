@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.GenreRequestDto;
+import ru.yandex.practicum.filmorate.dto.director.DirectorRequestDto;
 import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.dto.film.NewFilmDto;
 import ru.yandex.practicum.filmorate.dto.film.UpdateFilmDto;
@@ -14,7 +15,6 @@ import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
-import ru.yandex.practicum.filmorate.dto.DirectorRequestDto;
 
 import java.util.*;
 import java.util.function.Function;
@@ -39,18 +39,12 @@ public class FilmService {
         Film film = FilmMapper.mapToFilm(newFilmDto);
         film.setMpa(mpa);
 
-        // Обрабатываем жанры - ИСПРАВЛЕНИЕ: устанавливаем пустую коллекцию
         if (newFilmDto.getGenres() != null && !newFilmDto.getGenres().isEmpty()) {
             film.setGenres(mapFilmGenres(newFilmDto.getGenres()));
-        } else {
-            film.setGenres(new HashSet<>());
         }
 
-        // Обрабатываем режиссёров - ИСПРАВЛЕНИЕ: устанавливаем пустую коллекцию
         if (newFilmDto.getDirectors() != null && !newFilmDto.getDirectors().isEmpty()) {
             film.setDirectors(mapFilmDirectors(newFilmDto.getDirectors()));
-        } else {
-            film.setDirectors(new HashSet<>());
         }
 
         log.info("Creating film with {} directors and {} genres",
@@ -97,29 +91,27 @@ public class FilmService {
         FilmMapper.updateFilmFields(filmToUpdate, newFilm);
 
         // Обновляем жанры
-        if (newFilm.getGenres() != null && !newFilm.getGenres().isEmpty()) {
-            filmToUpdate.setGenres(mapFilmGenres(newFilm.getGenres()));
+        if (newFilm.getGenres() == null) {
+            filmToUpdate.setGenres(Collections.emptySet());
         } else {
-            filmToUpdate.setGenres(new HashSet<>());
+            filmToUpdate.setGenres(mapFilmGenres(newFilm.getGenres()));
         }
 
         // Обновляем режиссёров
-        if (newFilm.getDirectors() != null && !newFilm.getDirectors().isEmpty()) {
-            filmToUpdate.setDirectors(mapFilmDirectors(newFilm.getDirectors()));
+        if (newFilm.getDirectors() == null) {
+            filmToUpdate.setDirectors(Collections.emptySet());
         } else {
-            filmToUpdate.setDirectors(new HashSet<>());
+            filmToUpdate.setDirectors(mapFilmDirectors(newFilm.getDirectors()));
         }
 
         return FilmMapper.mapToFilmDto(filmStorage.updateFilm(filmToUpdate));
     }
 
-    // ДОБАВЛЯЕМ НОВЫЙ МЕТОД ДЛЯ ПОЛУЧЕНИЯ ФИЛЬМОВ ПО РЕЖИССЁРУ
     public List<FilmDto> getFilmsByDirector(int directorId, String sortBy) {
-        // Проверяем существование режиссёра
         directorStorage.getDirectorById(directorId)
                 .orElseThrow(() -> new NotFoundException("Режиссёр с id:" + directorId + " не найден"));
 
-        if (!"year".equals(sortBy) && !"likes".equals(sortBy)) {
+        if (!"year".equalsIgnoreCase(sortBy) && !"likes".equalsIgnoreCase(sortBy)) {
             throw new ValidationException("Параметр sortBy должен быть 'year' или 'likes'");
         }
 
@@ -129,10 +121,10 @@ public class FilmService {
                 .toList();
     }
 
-    // ВСПОМОГАТЕЛЬНЫЙ МЕТОД ДЛЯ МАППИНГА РЕЖИССЁРОВ - ИСПРАВЛЕНИЕ: обработка пустой коллекции
+    // ВСПОМОГАТЕЛЬНЫЙ МЕТОД ДЛЯ МАППИНГА РЕЖИССЁРОВ
     private Set<Director> mapFilmDirectors(Set<DirectorRequestDto> filmRequestDirectors) {
         if (filmRequestDirectors == null || filmRequestDirectors.isEmpty()) {
-            return new HashSet<>();
+            return Collections.emptySet();
         }
 
         return filmRequestDirectors.stream()
@@ -182,12 +174,17 @@ public class FilmService {
         filmStorage.addLike(filmId, userId);
     }
 
-    // ИСПРАВЛЕНИЕ: убрана лишняя проверка существования лайка
     public void deleteLike(int filmId, int userId) {
         Film film = filmStorage.getFilmById(filmId);
         if (film == null) {
             log.info("Error while deleting like. Film not found id: {}", filmId);
             throw new NotFoundException("Ошибка удаления лайка к фильму. Фильм не найден");
+        }
+
+        List<Integer> likes = filmStorage.getFilmLikes(filmId);
+        if (likes == null || likes.isEmpty() || !likes.contains(userId)) {
+            log.info("Error while deleting like. Like not found.");
+            throw new NotFoundException("Ошибка удаления лайка к фильму. Лайк не найден");
         }
 
         User user = userStorage.getUserById(userId);
@@ -196,7 +193,6 @@ public class FilmService {
             throw new NotFoundException("Ошибка удаления лайка к фильму. Пользователь не найден");
         }
 
-        // ПРОСТО УДАЛЯЕМ ЛАЙК БЕЗ ДОПОЛНИТЕЛЬНЫХ ПРОВЕРОК
         filmStorage.deleteLike(filmId, userId);
     }
 
@@ -211,6 +207,9 @@ public class FilmService {
     }
 
     private Set<Genre> mapFilmGenres(Set<GenreRequestDto> filmRequestGenres) {
+        if (filmRequestGenres.isEmpty()) {
+            return Collections.emptySet();
+        }
         Map<Integer, Genre> genresFromDb = filmStorage.getAllGenres().stream()
                 .collect(Collectors.toMap(Genre::getId, Function.identity()));
 

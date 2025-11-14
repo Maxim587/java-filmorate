@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage.database.mapper;
 
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -28,6 +29,10 @@ public class FilmRowMapper implements RowMapper<Film> {
         int like = rs.getInt("like");
         if (like != 0) {
             film.getLikes().add(like);
+        }
+        int directorId = rs.getInt("director_id");
+        if (directorId != 0) {
+            film.getDirectors().add(new Director(rs.getInt("director_id"), rs.getString("director")));
         }
 
         return film;
