@@ -338,32 +338,41 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
         String searchPattern = "%" + query.toLowerCase() + "%";
 
-        // Получаем ID фильмов, которые подходят под критерии поиска
-        Set<Integer> filmIds = new HashSet<>();
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT DISTINCT f.FILM_ID ");
+        sql.append("FROM FILM f ");
+
+        if (searchByDirector) {
+            sql.append("LEFT JOIN FILM_DIRECTOR fd ON f.FILM_ID = fd.FILM_ID ");
+            sql.append("LEFT JOIN DIRECTORS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID ");
+        }
+
+        sql.append("WHERE 1=0 ");
 
         if (searchByTitle) {
-            List<Integer> titleFilmIds = jdbc.queryForList(
-                    "SELECT film_id FROM film WHERE LOWER(name) LIKE ?",
-                    Integer.class, searchPattern
-            );
-            filmIds.addAll(titleFilmIds);
+            sql.append("OR LOWER(f.name) LIKE ? ");
         }
 
         if (searchByDirector) {
-            List<Integer> directorFilmIds = jdbc.queryForList(
-                    "SELECT fd.film_id FROM film_director fd " +
-                            "JOIN directors d ON fd.director_id = d.director_id " +
-                            "WHERE LOWER(d.name) LIKE ?",
-                    Integer.class, searchPattern
-            );
-            filmIds.addAll(directorFilmIds);
+            sql.append("OR LOWER(d.name) LIKE ? ");
         }
+
+        sql.append("ORDER BY (SELECT COUNT(*) FROM FILM_LIKE fl WHERE fl.FILM_ID = f.FILM_ID) DESC");
+
+        List<Object> params = new ArrayList<>();
+        if (searchByTitle) {
+            params.add(searchPattern);
+        }
+        if (searchByDirector) {
+            params.add(searchPattern);
+        }
+
+        List<Integer> filmIds = jdbc.queryForList(sql.toString(), Integer.class, params.toArray());
 
         if (filmIds.isEmpty()) {
             return Collections.emptyList();
         }
 
-        // Получаем полные данные по фильмам через уже работающий метод
         List<Film> films = new ArrayList<>();
         for (Integer filmId : filmIds) {
             Film film = getFilmById(filmId);
@@ -371,9 +380,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 films.add(film);
             }
         }
-
-        // Сортируем по количеству лайков (по убыванию)
-        films.sort((f1, f2) -> Integer.compare(f2.getLikes().size(), f1.getLikes().size()));
 
         return films;
     }
