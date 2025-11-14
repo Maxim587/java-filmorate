@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.user.FeedDto;
 import ru.yandex.practicum.filmorate.dto.user.NewUserDto;
 import ru.yandex.practicum.filmorate.dto.user.UpdateUserDto;
 import ru.yandex.practicum.filmorate.dto.user.UserDto;
@@ -79,5 +80,9 @@ public class UserController {
                 : ResponseEntity.notFound().build();
     }
 
-
+    @GetMapping("/{id}/feed")
+    public Collection<FeedDto> getUserFeed(@PathVariable int id) {
+        log.info("Start getting user feed for user id = {}", id);
+        return userService.getUserFeed(id);
+    }
 }

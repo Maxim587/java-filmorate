@@ -1,17 +1,22 @@
 package ru.yandex.practicum.filmorate.storage.database;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
+import ru.yandex.practicum.filmorate.model.FeedEntityType;
+import ru.yandex.practicum.filmorate.model.FeedEventOperation;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 abstract class BaseDbStorage<T> {
@@ -59,5 +64,20 @@ abstract class BaseDbStorage<T> {
         if (rowsUpdated == 0) {
             throw new InternalServerException("Не удалось обновить данные");
         }
+    }
+
+    protected Optional<T> findOne(String query, Object... params) {
+        try {
+            T result = jdbc.queryForObject(query, mapper, params);
+            return Optional.ofNullable(result);
+        } catch (EmptyResultDataAccessException ignored) {
+            return Optional.empty();
+        }
+    }
+
+    protected void addFeedEvent(int userId, int entityId, FeedEntityType eventType, FeedEventOperation operation) {
+        String query = "INSERT INTO FEED (\"TIMESTAMP\", USER_ID, ENTITY_ID, EVENT_TYPE, OPERATION) " +
+                "VALUES(?, ?, ?, ?, ?)";
+        insert(query, LocalDateTime.now(), userId, entityId, eventType.toString(), operation.toString());
     }
 }

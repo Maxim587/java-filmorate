@@ -6,9 +6,7 @@ import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.sql.Date;
@@ -36,7 +34,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String INSERT_FILM_QUERY = "INSERT INTO FILM(name, description, release_date, duration, rating_id) " +
             "VALUES (?, ?, ?, ?, ?)";
     private static final String UPDATE_QUERY = "UPDATE FILM " +
-            "SET name = ?, description = ?, release_date = ?, duration = ?, rating_id = ?";
+            "SET name = ?, description = ?, release_date = ?, duration = ?, rating_id = ? " +
+            "WHERE FILM_ID = ?";
     private static final String MOST_POPULAR_FILMS_QUERY = "SELECT " +
             "f.FILM_ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, f.RATING_ID, r.NAME as RATING_NAME, g.GENRE_ID, g.NAME AS GENRE, fl.USER_ID AS \"LIKE\" " +
             "FROM FILM f JOIN " +
@@ -172,7 +171,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 newFilm.getDescription(),
                 Date.valueOf(newFilm.getReleaseDate()),
                 newFilm.getDuration(),
-                newFilm.getMpa().getId()
+                newFilm.getMpa().getId(),
+                newFilm.getId()
         );
 
         delete(DELETE_FILM_GENRES_QUERY, newFilm.getId());
@@ -233,11 +233,13 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public void addLike(int filmId, int userId) {
         update(ADD_LIKE_QUERY, filmId, userId);
+        addFeedEvent(userId, filmId, FeedEntityType.LIKE, FeedEventOperation.ADD);
     }
 
     @Override
     public void deleteLike(int filmId, int userId) {
         update(DELETE_LIKE_QUERY, filmId, userId);
+        addFeedEvent(userId, filmId, FeedEntityType.LIKE, FeedEventOperation.REMOVE);
     }
 
     @Override

@@ -83,7 +83,7 @@ public class FilmService {
 
         FilmMapper.updateFilmFields(filmToUpdate, newFilm);
 
-        if (newFilm.getGenres() != null && !newFilm.getGenres().isEmpty()) {
+        if (newFilm.getGenres() != null) {
             filmToUpdate.setGenres(mapFilmGenres(newFilm.getGenres()));
         }
 
@@ -155,6 +155,9 @@ public class FilmService {
     }
 
     private Set<Genre> mapFilmGenres(Set<GenreRequestDto> filmRequestGenres) {
+        if (filmRequestGenres.isEmpty()) {
+            return Collections.emptySet();
+        }
         Map<Integer, Genre> genresFromDb = filmStorage.getAllGenres().stream()
                 .collect(Collectors.toMap(Genre::getId, Function.identity()));
 
