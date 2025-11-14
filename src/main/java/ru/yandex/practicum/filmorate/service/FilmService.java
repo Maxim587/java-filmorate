@@ -30,6 +30,11 @@ public class FilmService {
     private final DirectorStorage directorStorage;
 
     public FilmDto createFilm(NewFilmDto newFilmDto) {
+        // Проверяем что MPA не null
+        if (newFilmDto.getMpa() == null) {
+            throw new ValidationException("MPA rating is required");
+        }
+
         Mpa mpa = Optional.ofNullable(filmStorage.getRatingById(newFilmDto.getMpa().getId()))
                 .orElseThrow(() -> {
                     log.info("Rating not exists. Error while creating film {}", newFilmDto);
