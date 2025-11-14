@@ -336,7 +336,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             return Collections.emptyList();
         }
 
-        String searchPattern = "%" + query.toLowerCase() + "%";
+        String searchPattern = "%" + query + "%";
 
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT DISTINCT f.FILM_ID ");
@@ -347,41 +347,50 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             sql.append("LEFT JOIN DIRECTORS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID ");
         }
 
-        sql.append("WHERE 1=0 ");
+        sql.append("WHERE ");
 
+        List<String> conditions = new ArrayList<>();
         if (searchByTitle) {
-            sql.append("OR LOWER(f.name) LIKE ? ");
-        }
-
-        if (searchByDirector) {
-            sql.append("OR LOWER(d.name) LIKE ? ");
-        }
-
-        sql.append("ORDER BY (SELECT COUNT(*) FROM FILM_LIKE fl WHERE fl.FILM_ID = f.FILM_ID) DESC");
-
-        List<Object> params = new ArrayList<>();
-        if (searchByTitle) {
-            params.add(searchPattern);
+            conditions.add("f.name LIKE ?");
         }
         if (searchByDirector) {
-            params.add(searchPattern);
+            conditions.add("d.name LIKE ?");
         }
 
-        List<Integer> filmIds = jdbc.queryForList(sql.toString(), Integer.class, params.toArray());
+        sql.append(String.join(" OR ", conditions));
 
-        if (filmIds.isEmpty()) {
+        // Подготовка параметров
+        Object[] params;
+        if (searchByTitle && searchByDirector) {
+            params = new Object[]{searchPattern, searchPattern};
+        } else {
+            params = new Object[]{searchPattern};
+        }
+
+        try {
+            List<Integer> filmIds = jdbc.queryForList(sql.toString(), Integer.class, params);
+
+            if (filmIds.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            // Получаем полные данные по фильмам
+            List<Film> films = new ArrayList<>();
+            for (Integer filmId : filmIds) {
+                Film film = getFilmById(filmId);
+                if (film != null) {
+                    films.add(film);
+                }
+            }
+
+            // Сортируем в Java по количеству лайков (по убыванию)
+            films.sort((f1, f2) -> Integer.compare(f2.getLikes().size(), f1.getLikes().size()));
+
+            return films;
+        } catch (Exception e) {
+            e.printStackTrace();
             return Collections.emptyList();
         }
-
-        List<Film> films = new ArrayList<>();
-        for (Integer filmId : filmIds) {
-            Film film = getFilmById(filmId);
-            if (film != null) {
-                films.add(film);
-            }
-        }
-
-        return films;
     }
 
     private String buildSearchQuery(boolean searchByTitle, boolean searchByDirector) {
