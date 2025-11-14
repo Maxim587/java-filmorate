@@ -30,39 +30,40 @@ public class FilmService {
     private final DirectorStorage directorStorage;
 
     public FilmDto createFilm(NewFilmDto newFilmDto) {
-        Mpa mpa = Optional.ofNullable(filmStorage.getRatingById(newFilmDto.getMpa().getId()))
-                .orElseThrow(() -> {
-                    log.info("Rating not exists. Error while creating film {}", newFilmDto);
-                    return new NotFoundException("Рейтинг не существует id: " + newFilmDto.getMpa().getId());
-                });
+        log.info("Creating film: {}", newFilmDto);
 
-        Film film = FilmMapper.mapToFilm(newFilmDto);
-        film.setMpa(mpa);
+        try {
+            Mpa mpa = Optional.ofNullable(filmStorage.getRatingById(newFilmDto.getMpa().getId()))
+                    .orElseThrow(() -> {
+                        log.info("Rating not exists. Error while creating film {}", newFilmDto);
+                        return new NotFoundException("Рейтинг не существует id: " + newFilmDto.getMpa().getId());
+                    });
 
-        // Обрабатываем жанры
-        if (newFilmDto.getGenres() != null && !newFilmDto.getGenres().isEmpty()) {
-            film.setGenres(mapFilmGenres(newFilmDto.getGenres()));
-        } else {
-            film.setGenres(new HashSet<>());
+            Film film = FilmMapper.mapToFilm(newFilmDto);
+            film.setMpa(mpa);
+
+            // Обрабатываем жанры
+            if (newFilmDto.getGenres() != null && !newFilmDto.getGenres().isEmpty()) {
+                film.setGenres(mapFilmGenres(newFilmDto.getGenres()));
+            } else {
+                film.setGenres(new HashSet<>());
+            }
+
+            if (newFilmDto.getDirectors() != null && !newFilmDto.getDirectors().isEmpty()) {
+                film.setDirectors(mapFilmDirectors(newFilmDto.getDirectors()));
+            } else {
+                film.setDirectors(new HashSet<>());
+            }
+
+            log.info("Film prepared for creation: {}", film);
+            Film createdFilm = filmStorage.createFilm(film);
+            log.info("Film created successfully: {}", createdFilm);
+
+            return FilmMapper.mapToFilmDto(createdFilm);
+        } catch (Exception e) {
+            log.error("Error creating film: ", e);
+            throw e;
         }
-
-        // ВРЕМЕННО: устанавливаем пустую коллекцию директоров
-        film.setDirectors(new HashSet<>());
-
-        log.info("Creating film with {} genres", film.getGenres().size());
-
-        Film createdFilm = filmStorage.createFilm(film);
-        return FilmMapper.mapToFilmDto(createdFilm);
-    }
-
-    public List<FilmDto> getAllFilms() {
-        List<Film> films = filmStorage.getAllFilms();
-        if (films.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return films.stream()
-                .map(FilmMapper::mapToFilmDto)
-                .toList();
     }
 
     public FilmDto getFilmById(int id) {
@@ -125,13 +126,13 @@ public class FilmService {
                 .toList();
     }
 
-    // ВСПОМОГАТЕЛЬНЫЙ МЕТОД ДЛЯ МАППИНГА РЕЖИССЁРОВ - ИСПРАВЛЕНИЕ: обработка пустой коллекции
     private Set<Director> mapFilmDirectors(Set<DirectorRequestDto> filmRequestDirectors) {
         if (filmRequestDirectors == null || filmRequestDirectors.isEmpty()) {
             return new HashSet<>();
         }
 
         return filmRequestDirectors.stream()
+                .filter(Objects::nonNull) // Добавьте эту строку
                 .map(directorDto -> directorStorage.getDirectorById(directorDto.getId())
                         .orElseThrow(() -> {
                             log.info("Director not exists: {}", directorDto);
@@ -225,5 +226,12 @@ public class FilmService {
             throw new NotFoundException("Фильм с id=" + filmId + " не найден");
         }
         return true;
+    }
+
+    public List<FilmDto> getAllFilms() {
+        List<Film> films = filmStorage.getAllFilms();
+        return films.stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
     }
 }

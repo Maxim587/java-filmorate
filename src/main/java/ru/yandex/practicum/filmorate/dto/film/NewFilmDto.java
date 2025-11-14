@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import ru.yandex.practicum.filmorate.dto.DirectorRequestDto;
 import ru.yandex.practicum.filmorate.dto.GenreRequestDto;
 import ru.yandex.practicum.filmorate.dto.MpaRequestDto;
 import ru.yandex.practicum.filmorate.validation.ReleaseDateFrom;
@@ -31,6 +32,5 @@ public class NewFilmDto {
 
     private Set<GenreRequestDto> genres;
 
-    // ВРЕМЕННО: закомментируем директоров
-    // private Set<DirectorRequestDto> directors;
+    private Set<DirectorRequestDto> directors;
 }

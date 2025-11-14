@@ -1,47 +1,44 @@
--- Очищаем таблицы перед вставкой
-DELETE FROM film_director;
-DELETE FROM film_like;
-DELETE FROM film_genre;
-DELETE FROM film;
-DELETE FROM directors;
-DELETE FROM friendship;
-DELETE FROM users;
+MERGE INTO public.friendship_status (FRIENDSHIP_STATUS_ID, STATUS)
+    VALUES (1, 'CONFIRMED'),
+    (2, 'NOT_CONFIRMED');
 
--- Вставляем рейтинги MPA
-MERGE INTO RATING (rating_id, name) VALUES (1, 'G');
-MERGE INTO RATING (rating_id, name) VALUES (2, 'PG');
-MERGE INTO RATING (rating_id, name) VALUES (3, 'PG-13');
-MERGE INTO RATING (rating_id, name) VALUES (4, 'R');
-MERGE INTO RATING (rating_id, name) VALUES (5, 'NC-17');
+MERGE INTO rating (RATING_ID, NAME)
+    VALUES (1, 'G'),
+    (2, 'PG'),
+    (3, 'PG-13'),
+    (4, 'R'),
+    (5, 'NC-17');
 
--- Вставляем жанры
-MERGE INTO GENRE (genre_id, name) VALUES (1, 'Комедия');
-MERGE INTO GENRE (genre_id, name) VALUES (2, 'Драма');
-MERGE INTO GENRE (genre_id, name) VALUES (3, 'Мультфильм');
-MERGE INTO GENRE (genre_id, name) VALUES (4, 'Триллер');
-MERGE INTO GENRE (genre_id, name) VALUES (5, 'Документальный');
-MERGE INTO GENRE (genre_id, name) VALUES (6, 'Боевик');
+MERGE INTO genre (GENRE_ID, NAME)
+    VALUES (1, 'Комедия'),
+    (2, 'Драма'),
+    (3, 'Мультфильм'),
+    (4, 'Триллер'),
+    (5, 'Документальный'),
+    (6, 'Боевик');
 
--- Вставляем статусы дружбы
-MERGE INTO FRIENDSHIP_STATUS (friendship_status_id, status) VALUES (1, 'CONFIRMED');
-MERGE INTO FRIENDSHIP_STATUS (friendship_status_id, status) VALUES (2, 'NOT_CONFIRMED');
+MERGE INTO directors (DIRECTOR_ID, NAME)
+    VALUES (1, 'Кристофер Нолан'),
+    (2, 'Квентин Тарантино'),
+    (3, 'Стивен Спилберг'),
+    (4, 'Джеймс Кэмерон'),
+    (5, 'Мартин Скорсезе'),
+    (6, 'Дэвид Финчер'),
+    (7, 'Питер Джексон'),
+    (8, 'Ридли Скотт'),
+    (9, 'Вуди Аллен'),
+    (10, 'Алексей Герман');
 
--- Вставляем режиссеров (ВАЖНО: ID должны соответствовать тестам)
-MERGE INTO directors (director_id, name) VALUES (1, 'Режиссер 1');
-MERGE INTO directors (director_id, name) VALUES (2, 'Режиссер 2');
-MERGE INTO directors (director_id, name) VALUES (3, 'Стивен Спилберг');
+MERGE INTO film (FILM_ID, NAME, DESCRIPTION, RELEASE_DATE, DURATION, RATING_ID)
+    VALUES (1, 'Начало', 'Фильм о снах', '2010-07-16', 148, 3),
+    (2, 'Криминальное чтиво', 'Культовый фильм Тарантино', '1994-05-21', 154, 4),
+    (3, 'Парк Юрского периода', 'Динозавры оживают', '1993-06-11', 127, 2),
+    (4, 'Титаник', 'История любви на тонущем корабле', '1997-12-19', 195, 3),
+    (5, 'Отступники', 'Противостояние полиции и мафии', '2006-09-26', 151, 4);
 
--- Вставляем фильмы с правильными датами для тестов
-MERGE INTO film (film_id, name, description, release_date, duration, rating_id)
-VALUES (1, 'Фильм 1', 'Описание 1', '2000-04-17', 120, 1);
-
-MERGE INTO film (film_id, name, description, release_date, duration, rating_id)
-VALUES (2, 'Фильм 2', 'Описание 2', '2001-04-17', 130, 2);
-
-MERGE INTO film (film_id, name, description, release_date, duration, rating_id)
-VALUES (3, 'Фильм 3', 'Описание 3', '2002-04-17', 140, 3);
-
--- Связываем фильмы с режиссерами
-MERGE INTO film_director (film_id, director_id) VALUES (1, 3);
-MERGE INTO film_director (film_id, director_id) VALUES (2, 3);
-MERGE INTO film_director (film_id, director_id) VALUES (3, 3);
+MERGE INTO film_director (FILM_ID, DIRECTOR_ID)
+    VALUES (1, 1),
+    (2, 2),
+    (3, 3),
+    (4, 4),
+    (5, 5);

@@ -267,39 +267,31 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public List<Film> getFilmsByDirector(int directorId, String sortBy) {
-        try {
-            // Простой запрос для получения ID фильмов
-            String filmIdsQuery = "SELECT film_id FROM film_director WHERE director_id = ?";
-            List<Integer> filmIds = jdbc.queryForList(filmIdsQuery, Integer.class, directorId);
+        // Получаем ID фильмов режиссёра
+        String filmIdsQuery = "SELECT film_id FROM film_director WHERE director_id = ?";
+        List<Integer> filmIds = jdbc.queryForList(filmIdsQuery, Integer.class, directorId);
 
-            if (filmIds.isEmpty()) {
-                return Collections.emptyList();
-            }
-
-            // Получаем фильмы по одному через getFilmById
-            List<Film> films = new ArrayList<>();
-            for (Integer filmId : filmIds) {
-                Film film = getFilmById(filmId);
-                if (film != null) {
-                    films.add(film);
-                }
-            }
-
-            // Сортируем
-            if ("likes".equals(sortBy)) {
-                films.sort((f1, f2) -> Integer.compare(f2.getLikes().size(), f1.getLikes().size()));
-            } else if ("year".equals(sortBy)) {
-                films.sort(Comparator.comparing(Film::getReleaseDate));
-            }
-
-            return films;
-
-        } catch (Exception e) {
-            // Логируем полную информацию об ошибке
-            System.err.println("ERROR in getFilmsByDirector: " + e.getClass().getName() + ": " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Failed to get films by director", e);
+        if (filmIds.isEmpty()) {
+            return Collections.emptyList();
         }
+
+        // Получаем фильмы по ID
+        List<Film> films = new ArrayList<>();
+        for (Integer filmId : filmIds) {
+            Film film = getFilmById(filmId);
+            if (film != null) {
+                films.add(film);
+            }
+        }
+
+        // Сортируем фильмы
+        if ("likes".equals(sortBy)) {
+            films.sort((f1, f2) -> Integer.compare(f2.getLikes().size(), f1.getLikes().size()));
+        } else if ("year".equals(sortBy)) {
+            films.sort(Comparator.comparing(Film::getReleaseDate));
+        }
+
+        return films;
     }
 
     @Override
