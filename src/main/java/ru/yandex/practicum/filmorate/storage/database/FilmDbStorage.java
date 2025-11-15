@@ -6,6 +6,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.model.*;
@@ -59,6 +60,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "SELECT * FROM GENRE";
     private static final String FIND_GENRE_BY_ID_QUERY =
             "SELECT * FROM GENRE WHERE genre_id = ?";
+    private static final String FIND_GENRES_BY_IDS_QUERY =
+            "SELECT * FROM GENRE WHERE genre_id IN (:param)";
     private static final String DELETE_FILM_GENRES_QUERY =
             "DELETE FROM FILM_GENRE WHERE film_id = ?";
     private static final String ALL_RATINGS_QUERY =
@@ -127,7 +130,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             LEFT JOIN DIRECTOR d ON fd.DIRECTOR_ID = d.DIRECTOR_ID
             ORDER BY top_films.likes_count DESC, f.FILM_ID ASC
             """;
-
 
     private static final String COMMON_FILMS_QUERY = """
             SELECT
@@ -251,6 +253,17 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         }
     }
 
+    @Override
+    public List<Genre> getGenresByIds(List<Integer> genreIds) {
+        if (genreIds == null || genreIds.isEmpty()) {
+            log.warn("В метод `getGenresByIds` не переданы id жанров");
+            throw new InternalServerException("Произошла непредвиденная ошибка");
+        }
+
+        NamedParameterJdbcTemplate namedJdbc = new NamedParameterJdbcTemplate(jdbc);
+        return namedJdbc.query(FIND_GENRES_BY_IDS_QUERY, Map.of("param", genreIds), genreRowMapper);
+    }
+
     public void addFilmGenres(int filmId, List<Genre> genres) {
         jdbc.batchUpdate(ADD_MULTIPLE_GENRES_QUERY, new BatchPreparedStatementSetter() {
             @Override
@@ -311,11 +324,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public void addFilmDirectors(int filmId, List<Director> directors) {
-//        if (directors == null || directors.isEmpty()) {
-//            return;
-//        }
 
-        //List<Director> directorList = new ArrayList<>(directors);
         jdbc.batchUpdate(ADD_FILM_DIRECTORS_QUERY, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
@@ -412,35 +421,41 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         String searchQuery = buildSearchQuery(searchByTitle, searchByDirector);
         String searchPattern = "%" + query.toLowerCase() + "%";
 
+        List<Film> rawFilms;
+
         if (searchByTitle && searchByDirector) {
-            return jdbc.query(searchQuery, mapper, searchPattern, searchPattern);
+            rawFilms = jdbc.query(searchQuery, mapper, searchPattern, searchPattern);
         } else {
-            return jdbc.query(searchQuery, mapper, searchPattern);
+            rawFilms = jdbc.query(searchQuery, mapper, searchPattern);
         }
+
+        if (rawFilms.isEmpty()) {
+            return rawFilms;
+        }
+
+        return groupValues(rawFilms).stream()
+                .sorted(Comparator.comparing(Film::getLikesCount).reversed())
+                .toList();
     }
 
     private String buildSearchQuery(boolean searchByTitle, boolean searchByDirector) {
         String baseQuery = "SELECT DISTINCT f.FILM_ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, " +
-                "f.RATING_ID, r.NAME as RATING_NAME, g.GENRE_ID, g.NAME AS GENRE, fl.USER_ID AS \"LIKE\" " +
+                "f.RATING_ID, r.NAME as RATING_NAME, g.GENRE_ID, g.NAME AS GENRE, fl.USER_ID AS \"LIKE\", d.DIRECTOR_ID, d.NAME AS DIRECTOR " +
                 "FROM FILM f " +
                 "LEFT JOIN RATING r ON f.rating_id = r.rating_id " +
                 "LEFT JOIN FILM_GENRE fg ON f.FILM_ID = fg.FILM_ID " +
                 "LEFT JOIN GENRE g ON fg.GENRE_ID = g.GENRE_ID " +
-                "LEFT JOIN FILM_LIKE fl ON f.FILM_ID = fl.FILM_ID ";
+                "LEFT JOIN FILM_LIKE fl ON f.FILM_ID = fl.FILM_ID " +
+                "LEFT JOIN FILM_DIRECTOR fd ON f.FILM_ID = fd.FILM_ID " +
+                "LEFT JOIN DIRECTOR d ON fd.DIRECTOR_ID = d.DIRECTOR_ID";
 
         if (searchByTitle && searchByDirector) {
-            baseQuery += "LEFT JOIN FILM_DIRECTOR fd ON f.FILM_ID = fd.FILM_ID " +
-                    "LEFT JOIN DIRECTORS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID " +
-                    "WHERE (LOWER(f.name) LIKE LOWER(?) OR LOWER(d.name) LIKE LOWER(?)) ";
+            baseQuery += " WHERE (LOWER(f.name) LIKE LOWER(?) OR LOWER(d.name) LIKE LOWER(?)) ";
         } else if (searchByTitle) {
-            baseQuery += "WHERE LOWER(f.name) LIKE LOWER(?) ";
+            baseQuery += " WHERE LOWER(f.name) LIKE LOWER(?) ";
         } else if (searchByDirector) {
-            baseQuery += "LEFT JOIN FILM_DIRECTOR fd ON f.FILM_ID = fd.FILM_ID " +
-                    "LEFT JOIN DIRECTORS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID " +
-                    "WHERE LOWER(d.name) LIKE LOWER(?) ";
+            baseQuery += " WHERE LOWER(d.name) LIKE LOWER(?)";
         }
-
-        baseQuery += "ORDER BY (SELECT COUNT(*) FROM FILM_LIKE fl2 WHERE fl2.FILM_ID = f.FILM_ID) DESC";
 
         return baseQuery;
     }

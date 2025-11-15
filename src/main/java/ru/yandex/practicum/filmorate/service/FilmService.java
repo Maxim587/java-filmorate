@@ -212,9 +212,9 @@ public class FilmService {
         boolean searchByDirector = false;
 
         for (String param : searchBy) {
-            if ("title".equals(param.trim())) {
+            if ("title".equalsIgnoreCase(param.trim())) {
                 searchByTitle = true;
-            } else if ("director".equals(param.trim())) {
+            } else if ("director".equalsIgnoreCase(param.trim())) {
                 searchByDirector = true;
             }
         }
@@ -233,7 +233,10 @@ public class FilmService {
         if (filmRequestGenres.isEmpty()) {
             return Collections.emptySet();
         }
-        Map<Integer, Genre> genresFromDb = filmStorage.getAllGenres().stream()
+
+        List<Integer> genreIds = filmRequestGenres.stream().map(GenreRequestDto::getId).toList();
+
+        Map<Integer, Genre> genresFromDb = filmStorage.getGenresByIds(genreIds).stream()
                 .collect(Collectors.toMap(Genre::getId, Function.identity()));
 
         return filmRequestGenres.stream()

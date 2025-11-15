@@ -20,6 +20,8 @@ public interface FilmStorage {
 
     Genre getGenreById(int genreId);
 
+    List<Genre> getGenresByIds(List<Integer> genresIds);
+
     List<Mpa> getRatings();
 
     Mpa getRatingById(int ratingId);
