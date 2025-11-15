@@ -34,8 +34,16 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public List<FilmDto> getPopular(@RequestParam(defaultValue = "10") int count) {
-        log.info("Start getting popular films");
+    public List<FilmDto> getPopular(
+            @RequestParam(defaultValue = "10") Integer count,
+            @RequestParam(required = false) Integer genreId,
+            @RequestParam(required = false) Integer year) {
+        log.info("Start getting popular films with count={}, genreId={}, year={}", count, genreId, year);
+
+        if (genreId != null || year != null) {
+            return filmService.getPopularFilmsByGenreAndYear(count, genreId, year);
+        }
+
         return filmService.getMostPopular(count);
     }
 
@@ -80,5 +88,12 @@ public class FilmController {
                 : ResponseEntity.notFound().build();
     }
 
+    @GetMapping("/common")
+    public List<FilmDto> getCommonFilms(
+            @RequestParam int userId,
+            @RequestParam int friendId) {
+        log.info("Start getting common films for userId={} and friendId={}", userId, friendId);
+        return filmService.getCommonFilms(userId, friendId);
+    }
 
 }

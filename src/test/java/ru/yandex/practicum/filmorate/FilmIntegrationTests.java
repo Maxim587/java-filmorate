@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
+import ru.yandex.practicum.filmorate.dto.user.FeedDto;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -149,6 +150,33 @@ public class FilmIntegrationTests {
         assertThat(filmDbStorage.getFilmById(filmId)).isNull();
     }
 
+    @Test
+    public void userFeedOnFilmLikes() {
+        User user = prepareUser();
+        User dbUser = userDbStorage.createUser(user);
+        Film dbFilm = filmDbStorage.createFilm(prepareFilms().getFirst());
+
+        //событие на добавление лайка фильму
+        filmDbStorage.addLike(dbFilm.getId(), dbUser.getId());
+        List<FeedDto> feed = userDbStorage.getUserFeed(dbUser.getId());
+        assertThat(feed).hasSize(1);
+        FeedDto feedDto = feed.getFirst();
+        assertThat(feedDto.getUserId()).isEqualTo(dbUser.getId());
+        assertThat(feedDto.getEntityId()).isEqualTo(dbFilm.getId());
+        assertThat(feedDto.getOperation()).isEqualTo("ADD");
+        assertThat(feedDto.getEventType()).isEqualTo("LIKE");
+
+        //событие на удаление лайка
+        filmDbStorage.deleteLike(dbFilm.getId(), dbUser.getId());
+        feed = userDbStorage.getUserFeed(dbUser.getId());
+        assertThat(feed).hasSize(2);
+        feedDto = feed.getLast();
+        assertThat(feedDto.getUserId()).isEqualTo(dbUser.getId());
+        assertThat(feedDto.getEntityId()).isEqualTo(dbFilm.getId());
+        assertThat(feedDto.getOperation()).isEqualTo("REMOVE");
+        assertThat(feedDto.getEventType()).isEqualTo("LIKE");
+    }
+
     private List<Film> prepareFilms() {
         Film film = new Film();
         film.setName("name");
@@ -177,4 +205,64 @@ public class FilmIntegrationTests {
         user.setBirthday(LocalDate.of(1990, 1, 1));
         return user;
     }
+
+    @Test
+    public void getCommonFilms() {
+        Film film1 = filmDbStorage.createFilm(prepareFilms().getFirst());
+        Film film2 = filmDbStorage.createFilm(prepareFilms().getLast());
+        Film film3 = filmDbStorage.createFilm(prepareFilms().getFirst());
+        Film film4 = filmDbStorage.createFilm(prepareFilms().getLast());
+
+        User user1 = userDbStorage.createUser(prepareUser());
+        User user2 = userDbStorage.createUser(prepareUser());
+        User user3 = userDbStorage.createUser(prepareUser());
+
+        filmDbStorage.addLike(film1.getId(), user1.getId());
+        filmDbStorage.addLike(film2.getId(), user1.getId());
+        filmDbStorage.addLike(film3.getId(), user1.getId());
+
+        filmDbStorage.addLike(film2.getId(), user2.getId());
+        filmDbStorage.addLike(film3.getId(), user2.getId());
+        filmDbStorage.addLike(film4.getId(), user2.getId());
+
+        filmDbStorage.addLike(film3.getId(), user3.getId());
+
+        List<Film> commonFilms = filmDbStorage.getCommonFilms(user1.getId(), user2.getId());
+
+        assertThat(commonFilms).hasSize(2);
+
+        List<Integer> commonFilmIds = commonFilms.stream()
+                .map(Film::getId)
+                .toList();
+
+        assertThat(commonFilmIds).contains(film2.getId(), film3.getId());
+        assertThat(commonFilmIds).doesNotContain(film1.getId(), film4.getId());
+    }
+
+    @Test
+    public void getCommonFilmsWhenNoCommonFilms() {
+        Film film1 = filmDbStorage.createFilm(prepareFilms().getFirst());
+        Film film2 = filmDbStorage.createFilm(prepareFilms().getLast());
+
+        User user1 = userDbStorage.createUser(prepareUser());
+        User user2 = userDbStorage.createUser(prepareUser());
+
+        filmDbStorage.addLike(film1.getId(), user1.getId());
+        filmDbStorage.addLike(film2.getId(), user2.getId());
+
+        List<Film> commonFilms = filmDbStorage.getCommonFilms(user1.getId(), user2.getId());
+
+        assertThat(commonFilms).isEmpty();
+    }
+
+    @Test
+    public void getCommonFilmsWhenNoLikes() {
+        User user1 = userDbStorage.createUser(prepareUser());
+        User user2 = userDbStorage.createUser(prepareUser());
+
+        List<Film> commonFilms = filmDbStorage.getCommonFilms(user1.getId(), user2.getId());
+
+        assertThat(commonFilms).isEmpty();
+    }
+
 }

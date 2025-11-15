@@ -40,4 +40,7 @@ public interface FilmStorage {
 
     List<Director> getFilmDirectors(int filmId);
 
+    List<Film> getPopularFilmsByGenreAndYear(Integer count, Integer genreId, Integer year);
+
+    List<Film> getCommonFilms(int userId, int friendId);
 }
