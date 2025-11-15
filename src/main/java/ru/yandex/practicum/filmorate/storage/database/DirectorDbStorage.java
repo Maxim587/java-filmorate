@@ -13,27 +13,27 @@ import java.util.Optional;
 public class DirectorDbStorage extends BaseDbStorage<Director> implements DirectorStorage {
 
     private static final String FIND_ALL_QUERY = """
-            SELECT * 
-            FROM director 
+            SELECT *
+            FROM director
             ORDER BY director_id
             """;
     private static final String FIND_BY_ID_QUERY = """
-            SELECT * 
-            FROM director 
+            SELECT *
+            FROM director
             WHERE director_id = ?
             """;
     private static final String INSERT_QUERY = """
-            INSERT INTO director (name) 
+            INSERT INTO director (name)
             VALUES (?)
             """;
     private static final String UPDATE_QUERY = """
-            UPDATE director 
-            SET name = ? 
+            UPDATE director
+            SET name = ?
             WHERE director_id = ?
             """;
     private static final String DELETE_QUERY = """
-            DELETE 
-            FROM director 
+            DELETE
+            FROM director
             WHERE director_id = ?
             """;
 

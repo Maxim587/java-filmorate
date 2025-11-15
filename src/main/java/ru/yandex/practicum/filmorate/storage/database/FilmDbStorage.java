@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
@@ -80,8 +81,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "DELETE FROM film_director WHERE film_id = ?";
     private static final String GET_FILM_DIRECTORS_QUERY =
             "SELECT d.* FROM director d " +
-            "JOIN film_director fd ON d.director_id = fd.director_id " +
-            "WHERE fd.film_id = ?";
+                    "JOIN film_director fd ON d.director_id = fd.director_id " +
+                    "WHERE fd.film_id = ?";
     private static final String GET_FILMS_BY_DIRECTOR_QUERY = "SELECT " +
             "f.FILM_ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, f.RATING_ID, r.NAME as RATING_NAME, g.GENRE_ID, g.NAME AS GENRE, fl.USER_ID AS \"LIKE\", d.DIRECTOR_ID, d.NAME AS DIRECTOR " +
             "FROM FILM f " +
@@ -103,7 +104,9 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 r.NAME as RATING_NAME,
                 g.GENRE_ID,
                 g.NAME AS GENRE,
-                fl.USER_ID AS "LIKE"
+                fl.USER_ID AS "LIKE",
+                d.DIRECTOR_ID,
+                d.NAME AS DIRECTOR
             FROM FILM f
             JOIN (
                 SELECT f2.FILM_ID, COUNT(DISTINCT fl2.USER_ID) as likes_count
@@ -120,6 +123,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             LEFT JOIN FILM_GENRE fg ON f.FILM_ID = fg.FILM_ID
             LEFT JOIN GENRE g ON fg.GENRE_ID = g.GENRE_ID
             LEFT JOIN FILM_LIKE fl ON f.FILM_ID = fl.FILM_ID
+            LEFT JOIN FILM_DIRECTOR fd ON f.FILM_ID = fd.FILM_ID
+            LEFT JOIN DIRECTOR d ON fd.DIRECTOR_ID = d.DIRECTOR_ID
             ORDER BY top_films.likes_count DESC, f.FILM_ID ASC
             """;
 
@@ -135,7 +140,9 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 r.NAME as RATING_NAME,
                 g.GENRE_ID,
                 g.NAME AS GENRE,
-                fl.USER_ID AS "LIKE"
+                fl.USER_ID AS "LIKE",
+                d.DIRECTOR_ID,
+                d.NAME AS DIRECTOR
             FROM FILM f
             JOIN FILM_LIKE fl1 ON f.FILM_ID = fl1.FILM_ID AND fl1.USER_ID = ?
             JOIN FILM_LIKE fl2 ON f.FILM_ID = fl2.FILM_ID AND fl2.USER_ID = ?
@@ -143,6 +150,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             LEFT JOIN FILM_GENRE fg ON f.FILM_ID = fg.FILM_ID
             LEFT JOIN GENRE g ON fg.GENRE_ID = g.GENRE_ID
             LEFT JOIN FILM_LIKE fl ON f.FILM_ID = fl.FILM_ID
+            LEFT JOIN FILM_DIRECTOR fd ON f.FILM_ID = fd.FILM_ID
+            LEFT JOIN DIRECTOR d ON fd.DIRECTOR_ID = d.DIRECTOR_ID
             ORDER BY (SELECT COUNT(*) FROM FILM_LIKE WHERE FILM_ID = f.FILM_ID) DESC, f.FILM_ID ASC
             """;
     private final RowMapper<Genre> genreRowMapper;
@@ -179,9 +188,11 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public List<Film> getAllFilms() {
-        List<Film> films = groupValues(findMany(FIND_ALL_FILMS_QUERY));
-
-        return films;
+        List<Film> rawFilms = findMany(FIND_ALL_FILMS_QUERY);
+        if (rawFilms.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return groupValues(rawFilms);
     }
 
     @Override
