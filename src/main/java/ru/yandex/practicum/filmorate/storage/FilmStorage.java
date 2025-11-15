@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -32,6 +33,12 @@ public interface FilmStorage {
     boolean deleteFilmById(int filmId);
 
     List<Film> getMostPopular(int count);
+
+    void addFilmDirectors(int filmId, List<Director> directors);
+
+    List<Film> getFilmsByDirector(int directorId, String sortBy);
+
+    List<Director> getFilmDirectors(int filmId);
 
     List<Film> getPopularFilmsByGenreAndYear(Integer count, Integer genreId, Integer year);
 

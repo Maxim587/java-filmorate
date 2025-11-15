@@ -11,12 +11,10 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.database.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.storage.database.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.database.UserDbStorage;
-import ru.yandex.practicum.filmorate.storage.database.mapper.FilmRowMapper;
-import ru.yandex.practicum.filmorate.storage.database.mapper.GenreRowMapper;
-import ru.yandex.practicum.filmorate.storage.database.mapper.MpaRowMapper;
-import ru.yandex.practicum.filmorate.storage.database.mapper.UserRowMapper;
+import ru.yandex.practicum.filmorate.storage.database.mapper.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -27,10 +25,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 @JdbcTest
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-@Import({FilmDbStorage.class, UserDbStorage.class, UserRowMapper.class, FilmRowMapper.class, GenreRowMapper.class, MpaRowMapper.class})
+@Import({FilmDbStorage.class, UserDbStorage.class, UserRowMapper.class, FilmRowMapper.class,
+        GenreRowMapper.class, MpaRowMapper.class, DirectorDbStorage.class, DirectorRowMapper.class})
 public class FilmIntegrationTests {
     private final FilmDbStorage filmDbStorage;
     private final UserDbStorage userDbStorage;
+
 
     @Test
     public void createFilm() {
@@ -101,7 +101,6 @@ public class FilmIntegrationTests {
 
     @Test
     public void getMostPopularFilm() {
-
         Film film1 = filmDbStorage.createFilm(prepareFilms().getFirst());
         Film film2 = filmDbStorage.createFilm(prepareFilms().getLast());
         Film film3 = filmDbStorage.createFilm(prepareFilms().getFirst());

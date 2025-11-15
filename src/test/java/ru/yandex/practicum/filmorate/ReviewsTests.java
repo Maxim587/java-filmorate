@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Import({UserDbStorage.class, UserRowMapper.class, ReviewDbStorage.class, ReviewRowMapper.class,
-        FilmDbStorage.class, FilmRowMapper.class, GenreRowMapper.class, MpaRowMapper.class})
+        FilmDbStorage.class, FilmRowMapper.class, GenreRowMapper.class, MpaRowMapper.class, DirectorRowMapper.class,})
 public class ReviewsTests {
     private final UserDbStorage userDbStorage;
     private final ReviewDbStorage reviewDbStorage;
