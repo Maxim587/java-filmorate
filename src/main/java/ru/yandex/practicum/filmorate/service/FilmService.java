@@ -30,11 +30,6 @@ public class FilmService {
     private final DirectorStorage directorStorage;
 
     public FilmDto createFilm(NewFilmDto newFilmDto) {
-        // Проверяем что MPA не null
-        if (newFilmDto.getMpa() == null) {
-            throw new ValidationException("MPA rating is required");
-        }
-
         Mpa mpa = Optional.ofNullable(filmStorage.getRatingById(newFilmDto.getMpa().getId()))
                 .orElseThrow(() -> {
                     log.info("Rating not exists. Error while creating film {}", newFilmDto);
@@ -183,10 +178,10 @@ public class FilmService {
             throw new NotFoundException("Ошибка удаления лайка к фильму. Фильм не найден");
         }
 
-        User user = userStorage.getUserById(userId);
-        if (user == null) {
-            log.info("Error while deleting like. User not found id: {}", userId);
-            throw new NotFoundException("Ошибка удаления лайка к фильму. Пользователь не найден");
+        List<Integer> likes = filmStorage.getFilmLikes(filmId);
+        if (likes == null || likes.isEmpty() || !likes.contains(userId)) {
+            log.info("Error while deleting like. Like not found.");
+            throw new NotFoundException("Ошибка удаления лайка к фильму. Лайк не найден");
         }
 
         filmStorage.deleteLike(filmId, userId);

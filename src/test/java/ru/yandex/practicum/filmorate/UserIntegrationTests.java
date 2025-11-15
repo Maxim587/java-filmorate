@@ -4,13 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.context.annotation.Import;
 import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.database.UserDbStorage;
+import ru.yandex.practicum.filmorate.storage.database.mapper.UserRowMapper;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -18,18 +18,29 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
-@ActiveProfiles("test")
+@JdbcTest
+@AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
+@Import({UserDbStorage.class, UserRowMapper.class})
 public class UserIntegrationTests {
     private final UserDbStorage userDbStorage;
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    @Test
+    public void createFilm() {
+        User user = userDbStorage.createUser(getUser());
+
+        User dbUser = userDbStorage.getUserById(user.getId());
+        assertThat(dbUser).isNotNull();
+        assertThat(dbUser.getId()).isEqualTo(user.getId());
+        assertThat(dbUser.getEmail()).isEqualTo(user.getEmail());
+        assertThat(dbUser.getLogin()).isEqualTo(user.getLogin());
+        assertThat(dbUser.getName()).isEqualTo(user.getName());
+        assertThat(dbUser.getBirthday()).isEqualTo(user.getBirthday());
+    }
 
     @Test
     public void getAllUsers() {
+
         User user = userDbStorage.createUser(getUser());
         User user2 = userDbStorage.createUser(getUser());
 
@@ -62,6 +73,7 @@ public class UserIntegrationTests {
         assertThat(updatedUserFromDb.getLogin()).isEqualTo(newUser.getLogin());
         assertThat(updatedUserFromDb.getName()).isEqualTo(newUser.getName());
         assertThat(updatedUserFromDb.getBirthday()).isEqualTo(newUser.getBirthday());
+
     }
 
     @Test
@@ -69,21 +81,21 @@ public class UserIntegrationTests {
         User user1 = userDbStorage.createUser(getUser());
         User user2 = userDbStorage.createUser(getUser());
 
-        // добавление в друзья
+        //добавление в друзья
         userDbStorage.addFriend(user1.getId(), user2.getId(), 2);
         Map<Integer, Friendship> user1Friends = userDbStorage.getUserById(user1.getId()).getFriends();
         assertThat(user1Friends).hasSize(1);
         Friendship user1AndUser2Friendship = user1Friends.get(user2.getId());
-        assertThat(user1AndUser2Friendship).isNotNull(); // сущность Дружба != null
-        assertThat(user1AndUser2Friendship.getFriendId()).isEqualTo(user2.getId()); // в сущности Дружба нужный userId
-        assertThat(user1AndUser2Friendship.getStatus()).isEqualTo(FriendshipStatus.NOT_CONFIRMED.toString()); // в сущности Дружба нужный статус
-        assertThat(userDbStorage.getUserById(user2.getId()).getFriends()).isEmpty(); // у второго пользователя не должен появится в друзьях user1
+        assertThat(user1AndUser2Friendship).isNotNull(); //сущность Дружба != null
+        assertThat(user1AndUser2Friendship.getFriendId()).isEqualTo(user2.getId()); //в сущности Дружба нужный userId
+        assertThat(user1AndUser2Friendship.getStatus()).isEqualTo(FriendshipStatus.NOT_CONFIRMED.toString()); //в сущности Дружба нужный статус
+        assertThat(userDbStorage.getUserById(user2.getId()).getFriends()).isEmpty(); //у второго пользователя не должен появится в друзьях user1
 
-        // изменение статуса дружбы
+        //изменение статуса дружбы
         userDbStorage.addFriend(user1.getId(), user2.getId(), 1);
         assertThat(userDbStorage.getUserById(user1.getId()).getFriends().get(user2.getId()).getStatus()).isEqualTo(FriendshipStatus.CONFIRMED.toString());
 
-        // удаление
+        //удаление
         userDbStorage.deleteFriend(user1.getId(), user2.getId());
         assertThat(userDbStorage.getUserById(user1.getId()).getFriends()).isEmpty();
     }
@@ -100,6 +112,7 @@ public class UserIntegrationTests {
         assertThat(deleted).isTrue();
         assertThat(userDbStorage.getUserById(userId)).isNull();
     }
+
 
     private User getUser() {
         User user = new User();

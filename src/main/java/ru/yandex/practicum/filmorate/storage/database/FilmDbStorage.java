@@ -332,94 +332,39 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public List<Film> searchFilms(String query, boolean searchByTitle, boolean searchByDirector) {
-        if (!searchByTitle && !searchByDirector) {
-            return Collections.emptyList();
-        }
+        String searchQuery = buildSearchQuery(searchByTitle, searchByDirector);
+        String searchPattern = "%" + query.toLowerCase() + "%";
 
-        String searchPattern = "%" + query + "%";
-
-        StringBuilder sql = new StringBuilder();
-        sql.append("SELECT DISTINCT f.FILM_ID ");
-        sql.append("FROM FILM f ");
-
-        if (searchByDirector) {
-            sql.append("LEFT JOIN FILM_DIRECTOR fd ON f.FILM_ID = fd.FILM_ID ");
-            sql.append("LEFT JOIN DIRECTORS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID ");
-        }
-
-        sql.append("WHERE ");
-
-        List<String> conditions = new ArrayList<>();
-        if (searchByTitle) {
-            conditions.add("f.name LIKE ?");
-        }
-        if (searchByDirector) {
-            conditions.add("d.name LIKE ?");
-        }
-
-        sql.append(String.join(" OR ", conditions));
-
-        // Подготовка параметров
-        Object[] params;
         if (searchByTitle && searchByDirector) {
-            params = new Object[]{searchPattern, searchPattern};
+            return jdbc.query(searchQuery, mapper, searchPattern, searchPattern);
         } else {
-            params = new Object[]{searchPattern};
-        }
-
-        try {
-            List<Integer> filmIds = jdbc.queryForList(sql.toString(), Integer.class, params);
-
-            if (filmIds.isEmpty()) {
-                return Collections.emptyList();
-            }
-
-            // Получаем полные данные по фильмам
-            List<Film> films = new ArrayList<>();
-            for (Integer filmId : filmIds) {
-                Film film = getFilmById(filmId);
-                if (film != null) {
-                    films.add(film);
-                }
-            }
-
-            // Сортируем в Java по количеству лайков (по убыванию)
-            films.sort((f1, f2) -> Integer.compare(f2.getLikes().size(), f1.getLikes().size()));
-
-            return films;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Collections.emptyList();
+            return jdbc.query(searchQuery, mapper, searchPattern);
         }
     }
 
     private String buildSearchQuery(boolean searchByTitle, boolean searchByDirector) {
-        StringBuilder query = new StringBuilder();
-        query.append("SELECT DISTINCT f.FILM_ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, ");
-        query.append("f.RATING_ID, r.NAME as RATING_NAME, g.GENRE_ID, g.NAME AS GENRE, fl.USER_ID AS \"LIKE\" ");
-        query.append("FROM FILM f ");
-        query.append("LEFT JOIN RATING r ON f.rating_id = r.rating_id ");
-        query.append("LEFT JOIN FILM_GENRE fg ON f.FILM_ID = fg.FILM_ID ");
-        query.append("LEFT JOIN GENRE g ON fg.GENRE_ID = g.GENRE_ID ");
-        query.append("LEFT JOIN FILM_LIKE fl ON f.FILM_ID = fl.FILM_ID ");
-
-        if (searchByDirector) {
-            query.append("LEFT JOIN FILM_DIRECTOR fd ON f.FILM_ID = fd.FILM_ID ");
-            query.append("LEFT JOIN DIRECTORS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID ");
-        }
+        String baseQuery = "SELECT DISTINCT f.FILM_ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, " +
+                "f.RATING_ID, r.NAME as RATING_NAME, g.GENRE_ID, g.NAME AS GENRE, fl.USER_ID AS \"LIKE\" " +
+                "FROM FILM f " +
+                "LEFT JOIN RATING r ON f.rating_id = r.rating_id " +
+                "LEFT JOIN FILM_GENRE fg ON f.FILM_ID = fg.FILM_ID " +
+                "LEFT JOIN GENRE g ON fg.GENRE_ID = g.GENRE_ID " +
+                "LEFT JOIN FILM_LIKE fl ON f.FILM_ID = fl.FILM_ID ";
 
         if (searchByTitle && searchByDirector) {
-            query.append("WHERE (LOWER(f.name) LIKE ? OR LOWER(d.name) LIKE ?) ");
+            baseQuery += "LEFT JOIN FILM_DIRECTOR fd ON f.FILM_ID = fd.FILM_ID " +
+                    "LEFT JOIN DIRECTORS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID " +
+                    "WHERE (LOWER(f.name) LIKE LOWER(?) OR LOWER(d.name) LIKE LOWER(?)) ";
         } else if (searchByTitle) {
-            query.append("WHERE LOWER(f.name) LIKE ? ");
+            baseQuery += "WHERE LOWER(f.name) LIKE LOWER(?) ";
         } else if (searchByDirector) {
-            query.append("WHERE LOWER(d.name) LIKE ? ");
-        } else {
-            query.append("WHERE 1=0 "); // Если ничего не выбрано - возвращаем пустой результат
+            baseQuery += "LEFT JOIN FILM_DIRECTOR fd ON f.FILM_ID = fd.FILM_ID " +
+                    "LEFT JOIN DIRECTORS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID " +
+                    "WHERE LOWER(d.name) LIKE LOWER(?) ";
         }
 
-        query.append("ORDER BY (SELECT COUNT(*) FROM FILM_LIKE fl2 WHERE fl2.FILM_ID = f.FILM_ID) DESC");
+        baseQuery += "ORDER BY (SELECT COUNT(*) FROM FILM_LIKE fl2 WHERE fl2.FILM_ID = f.FILM_ID) DESC";
 
-        return query.toString();
+        return baseQuery;
     }
 }
