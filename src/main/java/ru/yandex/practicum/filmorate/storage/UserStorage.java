@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
+import ru.yandex.practicum.filmorate.dto.user.FeedDto;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.List;
@@ -24,4 +25,6 @@ public interface UserStorage {
     List<User> getUserFriends(int userId);
 
     List<User> findUsersByIds(List<Integer> userIds);
+
+    List<FeedDto> getUserFeed(int userId);
 }

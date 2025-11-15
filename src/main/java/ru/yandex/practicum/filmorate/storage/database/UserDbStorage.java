@@ -5,9 +5,13 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.dto.user.FeedDto;
+import ru.yandex.practicum.filmorate.model.FeedEntityType;
+import ru.yandex.practicum.filmorate.model.FeedEventOperation;
 import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.database.mapper.FeedRowMapper;
 
 import java.sql.Date;
 import java.util.HashMap;
@@ -55,6 +59,11 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
             "WHERE f1.USER_ID = ? " +
             "ORDER BY u.USER_ID";
     private static final String DELETE_USER_QUERY = "DELETE FROM USERS WHERE user_id = ?";
+    private static final String GET_USER_FEED_QUERY = "SELECT " +
+            "EVENT_ID, \"TIMESTAMP\", USER_ID, ENTITY_ID, EVENT_TYPE, OPERATION " +
+            "FROM FEED " +
+            "WHERE USER_ID=?" +
+            "ORDER BY EVENT_ID";
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
@@ -107,6 +116,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     @Override
     public void addFriend(int userId, int friendId, int friendshipStatusId) {
         update(ADD_FRIEND_QUERY, userId, friendId, friendshipStatusId);
+        addFeedEvent(userId, friendId, FeedEntityType.FRIEND, FeedEventOperation.ADD);
     }
 
     @Override
@@ -116,7 +126,11 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
     @Override
     public boolean deleteFriend(int userId, int friendId) {
-        return delete(DELETE_FRIEND_QUERY, userId, friendId);
+        boolean result = delete(DELETE_FRIEND_QUERY, userId, friendId);
+        if (result) {
+            addFeedEvent(userId, friendId, FeedEntityType.FRIEND, FeedEventOperation.REMOVE);
+        }
+        return result;
     }
 
     @Override
@@ -158,6 +172,11 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     public boolean deleteUserById(int userId) {
         int rowsAffected = jdbc.update(DELETE_USER_QUERY, userId);
         return rowsAffected > 0;
+    }
+
+    @Override
+    public List<FeedDto> getUserFeed(int userId) {
+        return jdbc.query(GET_USER_FEED_QUERY, new FeedRowMapper(), userId);
     }
 
 }

@@ -1,17 +1,17 @@
 package ru.yandex.practicum.filmorate;
 
 import lombok.RequiredArgsConstructor;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.jdbc.core.JdbcTemplate;
+import ru.yandex.practicum.filmorate.dto.user.FeedDto;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.database.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.storage.database.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.database.UserDbStorage;
 import ru.yandex.practicum.filmorate.storage.database.mapper.*;
@@ -23,49 +23,14 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @JdbcTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
+@AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-@Import({
-        FilmDbStorage.class,
-        UserDbStorage.class,
-        UserRowMapper.class,
-        FilmRowMapper.class,
-        GenreRowMapper.class,
-        MpaRowMapper.class,
-        DirectorRowMapper.class
-})
+@Import({FilmDbStorage.class, UserDbStorage.class, UserRowMapper.class, FilmRowMapper.class,
+        GenreRowMapper.class, MpaRowMapper.class, DirectorDbStorage.class, DirectorRowMapper.class})
 public class FilmIntegrationTests {
     private final FilmDbStorage filmDbStorage;
     private final UserDbStorage userDbStorage;
-    private final JdbcTemplate jdbcTemplate;
 
-    @BeforeEach
-    void setUp() {
-        // Очищаем и инициализируем базу перед каждым тестом
-        clearDatabase();
-        initializeTestData();
-    }
-
-    private void clearDatabase() {
-        jdbcTemplate.update("DELETE FROM film_director");
-        jdbcTemplate.update("DELETE FROM film_like");
-        jdbcTemplate.update("DELETE FROM film_genre");
-        jdbcTemplate.update("DELETE FROM film");
-        jdbcTemplate.update("DELETE FROM directors");
-        jdbcTemplate.update("DELETE FROM genre");
-        jdbcTemplate.update("DELETE FROM rating");
-        jdbcTemplate.update("DELETE FROM friendship");
-        jdbcTemplate.update("DELETE FROM users");
-        jdbcTemplate.update("DELETE FROM friendship_status");
-    }
-
-    private void initializeTestData() {
-        // Вставляем минимальные необходимые данные для тестов
-        jdbcTemplate.update("INSERT INTO rating (rating_id, name) VALUES (1, 'G'), (2, 'PG')");
-        jdbcTemplate.update("INSERT INTO genre (genre_id, name) VALUES (1, 'Комедия'), (2, 'Драма')");
-        jdbcTemplate.update("INSERT INTO directors (director_id, name) VALUES (1, 'Test Director')");
-        jdbcTemplate.update("INSERT INTO friendship_status (friendship_status_id, status) VALUES (1, 'CONFIRMED')");
-    }
 
     @Test
     public void createFilm() {
@@ -185,6 +150,33 @@ public class FilmIntegrationTests {
         assertThat(filmDbStorage.getFilmById(filmId)).isNull();
     }
 
+    @Test
+    public void userFeedOnFilmLikes() {
+        User user = prepareUser();
+        User dbUser = userDbStorage.createUser(user);
+        Film dbFilm = filmDbStorage.createFilm(prepareFilms().getFirst());
+
+        //событие на добавление лайка фильму
+        filmDbStorage.addLike(dbFilm.getId(), dbUser.getId());
+        List<FeedDto> feed = userDbStorage.getUserFeed(dbUser.getId());
+        assertThat(feed).hasSize(1);
+        FeedDto feedDto = feed.getFirst();
+        assertThat(feedDto.getUserId()).isEqualTo(dbUser.getId());
+        assertThat(feedDto.getEntityId()).isEqualTo(dbFilm.getId());
+        assertThat(feedDto.getOperation()).isEqualTo("ADD");
+        assertThat(feedDto.getEventType()).isEqualTo("LIKE");
+
+        //событие на удаление лайка
+        filmDbStorage.deleteLike(dbFilm.getId(), dbUser.getId());
+        feed = userDbStorage.getUserFeed(dbUser.getId());
+        assertThat(feed).hasSize(2);
+        feedDto = feed.getLast();
+        assertThat(feedDto.getUserId()).isEqualTo(dbUser.getId());
+        assertThat(feedDto.getEntityId()).isEqualTo(dbFilm.getId());
+        assertThat(feedDto.getOperation()).isEqualTo("REMOVE");
+        assertThat(feedDto.getEventType()).isEqualTo("LIKE");
+    }
+
     private List<Film> prepareFilms() {
         Film film = new Film();
         film.setName("name");
@@ -213,4 +205,64 @@ public class FilmIntegrationTests {
         user.setBirthday(LocalDate.of(1990, 1, 1));
         return user;
     }
+
+    @Test
+    public void getCommonFilms() {
+        Film film1 = filmDbStorage.createFilm(prepareFilms().getFirst());
+        Film film2 = filmDbStorage.createFilm(prepareFilms().getLast());
+        Film film3 = filmDbStorage.createFilm(prepareFilms().getFirst());
+        Film film4 = filmDbStorage.createFilm(prepareFilms().getLast());
+
+        User user1 = userDbStorage.createUser(prepareUser());
+        User user2 = userDbStorage.createUser(prepareUser());
+        User user3 = userDbStorage.createUser(prepareUser());
+
+        filmDbStorage.addLike(film1.getId(), user1.getId());
+        filmDbStorage.addLike(film2.getId(), user1.getId());
+        filmDbStorage.addLike(film3.getId(), user1.getId());
+
+        filmDbStorage.addLike(film2.getId(), user2.getId());
+        filmDbStorage.addLike(film3.getId(), user2.getId());
+        filmDbStorage.addLike(film4.getId(), user2.getId());
+
+        filmDbStorage.addLike(film3.getId(), user3.getId());
+
+        List<Film> commonFilms = filmDbStorage.getCommonFilms(user1.getId(), user2.getId());
+
+        assertThat(commonFilms).hasSize(2);
+
+        List<Integer> commonFilmIds = commonFilms.stream()
+                .map(Film::getId)
+                .toList();
+
+        assertThat(commonFilmIds).contains(film2.getId(), film3.getId());
+        assertThat(commonFilmIds).doesNotContain(film1.getId(), film4.getId());
+    }
+
+    @Test
+    public void getCommonFilmsWhenNoCommonFilms() {
+        Film film1 = filmDbStorage.createFilm(prepareFilms().getFirst());
+        Film film2 = filmDbStorage.createFilm(prepareFilms().getLast());
+
+        User user1 = userDbStorage.createUser(prepareUser());
+        User user2 = userDbStorage.createUser(prepareUser());
+
+        filmDbStorage.addLike(film1.getId(), user1.getId());
+        filmDbStorage.addLike(film2.getId(), user2.getId());
+
+        List<Film> commonFilms = filmDbStorage.getCommonFilms(user1.getId(), user2.getId());
+
+        assertThat(commonFilms).isEmpty();
+    }
+
+    @Test
+    public void getCommonFilmsWhenNoLikes() {
+        User user1 = userDbStorage.createUser(prepareUser());
+        User user2 = userDbStorage.createUser(prepareUser());
+
+        List<Film> commonFilms = filmDbStorage.getCommonFilms(user1.getId(), user2.getId());
+
+        assertThat(commonFilms).isEmpty();
+    }
+
 }

@@ -23,8 +23,8 @@ public class DirectorService {
     }
 
     public Director getDirectorById(int id) {
-        return directorStorage.getDirectorById(id)
-                .orElseThrow(() -> new NotFoundException("Режиссёр с id:" + id + " не найден"));
+        return directorStorage.getDirectorById(id).orElseThrow(() ->
+                new NotFoundException("Режиссёр с id:" + id + " не найден"));
     }
 
     public Director createDirector(NewDirectorDto newDirectorDto) {
@@ -34,9 +34,8 @@ public class DirectorService {
     }
 
     public Director updateDirector(UpdateDirectorDto updateDirectorDto) {
-        // Проверяем существование режиссёра перед обновлением
-        directorStorage.getDirectorById(updateDirectorDto.getId())
-                .orElseThrow(() -> new NotFoundException("Режиссёр с id:" + updateDirectorDto.getId() + " не найден"));
+        directorStorage.getDirectorById(updateDirectorDto.getId()).orElseThrow(() ->
+                new NotFoundException("Режиссёр с id:" + updateDirectorDto.getId() + " не найден"));
 
         Director director = new Director();
         director.setId(updateDirectorDto.getId());
@@ -44,11 +43,9 @@ public class DirectorService {
         return directorStorage.updateDirector(director);
     }
 
-    public void deleteDirector(int id) {
-        // Проверяем существование режиссёра перед удалением
-        directorStorage.getDirectorById(id)
-                .orElseThrow(() -> new NotFoundException("Режиссёр с id:" + id + " не найден"));
-
-        directorStorage.deleteDirector(id);
+    public boolean deleteDirector(int id) {
+        directorStorage.getDirectorById(id).orElseThrow(() ->
+                new NotFoundException("Режиссёр с id:" + id + " не найден"));
+        return directorStorage.deleteDirector(id);
     }
 }

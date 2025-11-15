@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface DirectorStorage {
-
     List<Director> getAllDirectors();
 
     Optional<Director> getDirectorById(int id);
@@ -15,5 +14,5 @@ public interface DirectorStorage {
 
     Director updateDirector(Director director);
 
-    void deleteDirector(int id);
+    boolean deleteDirector(int id);
 }
