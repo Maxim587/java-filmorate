@@ -206,11 +206,37 @@ public class FilmService {
                 .toList();
     }
 
+    public List<FilmDto> searchFilms(String query, String by) {
+        String[] searchBy = by.split(",");
+        boolean searchByTitle = false;
+        boolean searchByDirector = false;
+
+        for (String param : searchBy) {
+            if ("title".equalsIgnoreCase(param.trim())) {
+                searchByTitle = true;
+            } else if ("director".equalsIgnoreCase(param.trim())) {
+                searchByDirector = true;
+            }
+        }
+
+        if (!searchByTitle && !searchByDirector) {
+            throw new ValidationException("Параметр 'by' должен содержать 'title' и/или 'director'");
+        }
+
+        List<Film> films = filmStorage.searchFilms(query, searchByTitle, searchByDirector);
+        return films.stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
     private Set<Genre> mapFilmGenres(Set<GenreRequestDto> filmRequestGenres) {
         if (filmRequestGenres.isEmpty()) {
             return Collections.emptySet();
         }
-        Map<Integer, Genre> genresFromDb = filmStorage.getAllGenres().stream()
+
+        List<Integer> genreIds = filmRequestGenres.stream().map(GenreRequestDto::getId).toList();
+
+        Map<Integer, Genre> genresFromDb = filmStorage.getGenresByIds(genreIds).stream()
                 .collect(Collectors.toMap(Genre::getId, Function.identity()));
 
         return filmRequestGenres.stream()

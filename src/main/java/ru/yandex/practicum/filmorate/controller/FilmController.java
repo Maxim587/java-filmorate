@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.dto.film.NewFilmDto;
 import ru.yandex.practicum.filmorate.dto.film.UpdateFilmDto;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.List;
@@ -52,6 +53,19 @@ public class FilmController {
                                             @RequestParam(defaultValue = "year") String sortBy) {
         log.info("Start getting films by director id: {} sorted by {}", directorId, sortBy);
         return filmService.getFilmsByDirector(directorId, sortBy);
+    }
+
+    @GetMapping("/search")
+    public List<FilmDto> searchFilms(@RequestParam String query,
+                                     @RequestParam(defaultValue = "title,director") String by) {
+        log.info("Start searching films with query: {}, by: {}", query, by);
+
+        // Базовая валидация параметра by
+        if (!by.matches("^(?i)(title|director)(,(title|director))?$")) {
+            throw new ValidationException("Параметр 'by' должен содержать 'title' и/или 'director'");
+        }
+
+        return filmService.searchFilms(query, by);
     }
 
     @PostMapping
