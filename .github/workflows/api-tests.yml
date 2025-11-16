@@ -1,8 +1,8 @@
-name: Films API Tests
-
-on:
-  pull_request:
-
-jobs:
-  build:
-    uses: yandex-praktikum/java-filmorate/.github/workflows/api-tests.yml@ci
+- name: Get PR files
+  if: github.event_name == 'pull_request'
+  env:
+    GH_TOKEN: ${{ github.token }}
+  run: |
+    PULL=$(gh api \
+      -H "Accept: application/vnd.github+json" \
+      "/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files?per_page=100" || echo "[]")

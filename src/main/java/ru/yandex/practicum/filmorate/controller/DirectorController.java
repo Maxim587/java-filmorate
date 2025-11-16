@@ -55,4 +55,6 @@ public class DirectorController {
         log.info("Start deleting director with id:{}", id);
         return directorService.deleteDirector(id);
     }
+
+    // mvn test -Dtest=FilmIntegrationTests#getAllFilms
 }
