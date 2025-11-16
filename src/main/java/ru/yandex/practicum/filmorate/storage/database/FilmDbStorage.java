@@ -21,7 +21,19 @@ import java.util.*;
 @Primary
 @Repository
 public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
-
+    private static final String FIND_WITH_JOINS =
+            "SELECT " +
+                    "f.FILM_ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, f.RATING_ID, " +
+                    "r.NAME AS RATING_NAME, " +
+                    "g.GENRE_ID, g.NAME AS GENRE, " +
+                    "fl.USER_ID AS \"LIKE\", " +
+                    "d.DIRECTOR_ID, d.NAME AS DIRECTOR " +
+                    "FROM FILM f " +
+                    "LEFT JOIN RATING r ON f.RATING_ID = r.RATING_ID " +
+                    "LEFT JOIN FILM_GENRE fg ON f.FILM_ID = fg.FILM_ID " +
+                    "LEFT JOIN GENRE g ON fg.GENRE_ID = g.GENRE_ID " +
+                    "LEFT JOIN FILM_DIRECTOR fd ON f.FILM_ID = fd.FILM_ID " +
+                    "LEFT JOIN DIRECTOR d ON fd.DIRECTOR_ID = d.DIRECTOR_ID ";
     private static final String FIND_ALL_FILMS_QUERY = "SELECT " +
             "f.FILM_ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, f.RATING_ID, r.NAME as RATING_NAME, g.GENRE_ID, g.NAME AS GENRE, fl.USER_ID AS \"LIKE\", d.DIRECTOR_ID, d.NAME AS DIRECTOR " +
             "FROM FILM f LEFT JOIN RATING r ON f.rating_id = r.rating_id " +
@@ -39,6 +51,15 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "LEFT JOIN FILM_DIRECTOR fd ON f.FILM_ID = fd.FILM_ID " +
             "LEFT JOIN DIRECTOR d ON fd.DIRECTOR_ID = d.DIRECTOR_ID " +
             "WHERE f.FILM_ID = ?";
+    private static final String FIND_FILM_BY_LIKE_USER_ID =
+            FIND_WITH_JOINS +
+                    "JOIN FILM_LIKE fl ON f.FILM_ID = fl.FILM_ID " +
+                    "WHERE fl.USER_ID = ?";
+    private static final String FIND_RECOMMENDED =
+            FIND_WITH_JOINS +
+                    "LEFT JOIN FILM_LIKE fl ON fl.FILM_ID = f.FILM_ID " +
+                    "JOIN FILM_LIKE fl_from ON fl_from.FILM_ID = f.FILM_ID AND fl_from.USER_ID = ? " +
+                    "WHERE f.FILM_ID NOT IN (SELECT FILM_ID FROM FILM_LIKE WHERE USER_ID = ?)";
     private static final String INSERT_FILM_QUERY = "INSERT INTO FILM(name, description, release_date, duration, rating_id) " +
             "VALUES (?, ?, ?, ?, ?)";
     private static final String UPDATE_QUERY = "UPDATE FILM " +
@@ -194,6 +215,37 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         if (rawFilms.isEmpty()) {
             return Collections.emptyList();
         }
+        return groupValues(rawFilms);
+    }
+
+    @Override
+    public List<Film> getUserLikedFilms(int userId) {
+        List<Film> rawFilms = findMany(
+                FIND_FILM_BY_LIKE_USER_ID,
+                userId
+        );
+        if (rawFilms.isEmpty()) {
+            return rawFilms;
+        }
+
+        return groupValues(rawFilms);
+    }
+
+    @Override
+    public List<Film> getRecommended(
+            int toUserId,
+            int fromUserId
+    ) {
+        List<Film> rawFilms = findMany(
+                FIND_RECOMMENDED,
+                fromUserId,
+                toUserId
+        );
+
+        if (rawFilms.isEmpty()) {
+            return rawFilms;
+        }
+
         return groupValues(rawFilms);
     }
 

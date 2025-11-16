@@ -206,25 +206,49 @@ public class FilmService {
                 .toList();
     }
 
-    public List<FilmDto> searchFilms(String query, String by) {
-        String[] searchBy = by.split(",");
-        boolean searchByTitle = false;
-        boolean searchByDirector = false;
+    /**
+     * Get films which user might be interested in
+     */
+    public List<FilmDto> getRecommended(int userId) {
+        User user = userStorage.getUserById(userId);
 
-        for (String param : searchBy) {
-            if ("title".equalsIgnoreCase(param.trim())) {
-                searchByTitle = true;
-            } else if ("director".equalsIgnoreCase(param.trim())) {
-                searchByDirector = true;
+        if (user == null) {
+            log.info("Error on getting film recommendations. User not found id: {}", userId);
+            throw new NotFoundException("Ошибка определения рекоммендаций. Пользователь не найден");
+        }
+
+        // Find most similar user
+
+        Set<Integer> userLiked = getLikedFilmIds(userId);
+        int otherUserId = -1;
+        int maxLikesCount = 0;
+
+        for (User other : userStorage.getAllUsers()) {
+            if (other.getId().equals(userId)) {
+                continue;
+            }
+
+            int common = (int) getLikedFilmIds(other.getId())
+                    .stream()
+                    .filter(userLiked::contains)
+                    .count();
+
+            if (common > maxLikesCount) {
+                maxLikesCount = common;
+                otherUserId = other.getId();
             }
         }
 
-        if (!searchByTitle && !searchByDirector) {
-            throw new ValidationException("Параметр 'by' должен содержать 'title' и/или 'director'");
+        // Get films liked by similar user but not by current one
+
+        if (otherUserId == -1) {
+            log.info("No similar user found for user id: {}", userId);
+            return Collections.emptyList();
         }
 
-        List<Film> films = filmStorage.searchFilms(query, searchByTitle, searchByDirector);
-        return films.stream()
+        return filmStorage
+                .getRecommended(userId, otherUserId)
+                .stream()
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
     }
@@ -289,4 +313,14 @@ public class FilmService {
                 .toList();
     }
 
+    /**
+     * Get films liked by the user
+     */
+    private Set<Integer> getLikedFilmIds(int userId) {
+        return filmStorage
+                .getUserLikedFilms(userId)
+                .stream()
+                .map(Film::getId)
+                .collect(Collectors.toSet());
+    }
 }
