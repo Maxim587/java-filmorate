@@ -12,6 +12,14 @@ public interface FilmStorage {
 
     List<Film> getAllFilms();
 
+    List<Film> getUserLikedFilms(int userId);
+
+    /**
+     * @param toUserId   For who recommendations are required
+     * @param fromUserId From who recommendations are provided
+     */
+    List<Film> getRecommended(int toUserId, int fromUserId);
+
     Film getFilmById(int filmId);
 
     Film updateFilm(Film newFilm);
