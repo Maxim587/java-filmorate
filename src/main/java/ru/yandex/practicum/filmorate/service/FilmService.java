@@ -257,7 +257,10 @@ public class FilmService {
         if (filmRequestGenres.isEmpty()) {
             return Collections.emptySet();
         }
-        Map<Integer, Genre> genresFromDb = filmStorage.getAllGenres().stream()
+
+        List<Integer> genreIds = filmRequestGenres.stream().map(GenreRequestDto::getId).toList();
+
+        Map<Integer, Genre> genresFromDb = filmStorage.getGenresByIds(genreIds).stream()
                 .collect(Collectors.toMap(Genre::getId, Function.identity()));
 
         return filmRequestGenres.stream()

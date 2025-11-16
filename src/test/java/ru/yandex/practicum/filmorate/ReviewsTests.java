@@ -135,7 +135,7 @@ public class ReviewsTests {
 
 
         //удаляем реакцию
-        reviewDbStorage.deleteReviewReaction(review0.getReviewId(), user1.getId(),  0);
+        reviewDbStorage.deleteReviewReaction(review0.getReviewId(), user1.getId(), 0);
         //получаем реакцию пользователя на отзыв
         reaction = reviewDbStorage.getReviewReaction(review0.getReviewId(), user1.getId());
         assertThat(reaction.isPresent()).isFalse(); //проверяем что реакции нет

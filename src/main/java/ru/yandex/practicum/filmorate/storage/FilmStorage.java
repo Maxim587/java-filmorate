@@ -28,6 +28,8 @@ public interface FilmStorage {
 
     Genre getGenreById(int genreId);
 
+    List<Genre> getGenresByIds(List<Integer> genresIds);
+
     List<Mpa> getRatings();
 
     Mpa getRatingById(int ratingId);
@@ -51,4 +53,6 @@ public interface FilmStorage {
     List<Film> getPopularFilmsByGenreAndYear(Integer count, Integer genreId, Integer year);
 
     List<Film> getCommonFilms(int userId, int friendId);
+
+    List<Film> searchFilms(String query, boolean searchByTitle, boolean searchByDirector);
 }
