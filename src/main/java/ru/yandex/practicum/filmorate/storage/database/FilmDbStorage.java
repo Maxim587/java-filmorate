@@ -421,42 +421,67 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         String searchQuery = buildSearchQuery(searchByTitle, searchByDirector);
         String searchPattern = "%" + query.toLowerCase() + "%";
 
-        List<Film> rawFilms;
-
+        // Получаем только ID фильмов, удовлетворяющих условиям поиска
+        List<Integer> filmIds;
         if (searchByTitle && searchByDirector) {
-            rawFilms = jdbc.query(searchQuery, mapper, searchPattern, searchPattern);
+            filmIds = jdbc.query(searchQuery, (rs, rowNum) -> rs.getInt("FILM_ID"), searchPattern, searchPattern);
         } else {
-            rawFilms = jdbc.query(searchQuery, mapper, searchPattern);
+            filmIds = jdbc.query(searchQuery, (rs, rowNum) -> rs.getInt("FILM_ID"), searchPattern);
         }
 
-        if (rawFilms.isEmpty()) {
-            return rawFilms;
+        if (filmIds.isEmpty()) {
+            return Collections.emptyList();
         }
 
-        return groupValues(rawFilms).stream()
+        // Загружаем полные данные фильмов по их ID
+        return findFilmsByIds(filmIds).stream()
                 .sorted(Comparator.comparing(Film::getLikesCount).reversed())
                 .toList();
     }
 
     private String buildSearchQuery(boolean searchByTitle, boolean searchByDirector) {
-        String baseQuery = "SELECT DISTINCT f.FILM_ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, " +
-                "f.RATING_ID, r.NAME as RATING_NAME, g.GENRE_ID, g.NAME AS GENRE, fl.USER_ID AS \"LIKE\", d.DIRECTOR_ID, d.NAME AS DIRECTOR " +
+        String baseQuery = "SELECT DISTINCT f.FILM_ID FROM FILM f ";
+
+        if (searchByDirector) {
+            baseQuery += "LEFT JOIN FILM_DIRECTOR fd ON f.FILM_ID = fd.FILM_ID " +
+                    "LEFT JOIN DIRECTOR d ON fd.DIRECTOR_ID = d.DIRECTOR_ID ";
+        }
+
+        if (searchByTitle && searchByDirector) {
+            baseQuery += "WHERE (LOWER(f.name) LIKE LOWER(?) OR LOWER(d.name) LIKE LOWER(?)) ";
+        } else if (searchByTitle) {
+            baseQuery += "WHERE LOWER(f.name) LIKE LOWER(?) ";
+        } else if (searchByDirector) {
+            baseQuery += "WHERE LOWER(d.name) LIKE LOWER(?)";
+        }
+
+        return baseQuery;
+    }
+
+    private List<Film> findFilmsByIds(List<Integer> filmIds) {
+        if (filmIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String placeholders = String.join(",", Collections.nCopies(filmIds.size(), "?"));
+        String query = "SELECT f.FILM_ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, " +
+                "f.RATING_ID, r.NAME as RATING_NAME, g.GENRE_ID, g.NAME AS GENRE, " +
+                "fl.USER_ID AS \"LIKE\", d.DIRECTOR_ID, d.NAME AS DIRECTOR " +
                 "FROM FILM f " +
                 "LEFT JOIN RATING r ON f.rating_id = r.rating_id " +
                 "LEFT JOIN FILM_GENRE fg ON f.FILM_ID = fg.FILM_ID " +
                 "LEFT JOIN GENRE g ON fg.GENRE_ID = g.GENRE_ID " +
                 "LEFT JOIN FILM_LIKE fl ON f.FILM_ID = fl.FILM_ID " +
                 "LEFT JOIN FILM_DIRECTOR fd ON f.FILM_ID = fd.FILM_ID " +
-                "LEFT JOIN DIRECTOR d ON fd.DIRECTOR_ID = d.DIRECTOR_ID";
+                "LEFT JOIN DIRECTOR d ON fd.DIRECTOR_ID = d.DIRECTOR_ID " +
+                "WHERE f.FILM_ID IN (" + placeholders + ")";
 
-        if (searchByTitle && searchByDirector) {
-            baseQuery += " WHERE (LOWER(f.name) LIKE LOWER(?) OR LOWER(d.name) LIKE LOWER(?)) ";
-        } else if (searchByTitle) {
-            baseQuery += " WHERE LOWER(f.name) LIKE LOWER(?) ";
-        } else if (searchByDirector) {
-            baseQuery += " WHERE LOWER(d.name) LIKE LOWER(?)";
+        List<Film> rawFilms = jdbc.query(query, mapper, filmIds.toArray());
+
+        if (rawFilms.isEmpty()) {
+            return rawFilms;
         }
 
-        return baseQuery;
+        return groupValues(rawFilms);
     }
 }
