@@ -21,43 +21,81 @@ import java.util.Optional;
 @Repository
 public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStorage {
 
-    private static final String INSERT_QUERY = "INSERT " +
-            "INTO REVIEW(CONTENT, IS_POSITIVE, USER_ID, FILM_ID, USEFUL)" +
-            "VALUES(?, ?, ?, ?, ?)";
-    private static final String FIND_BY_ID_QUERY = "SELECT " +
-            "REVIEW_ID, CONTENT, IS_POSITIVE, USER_ID, FILM_ID, USEFUL " +
-            "FROM REVIEW " +
-            "WHERE REVIEW_ID = ?";
-    private static final String FIND_REVIEWS_BY_FILM_QUERY = "SELECT " +
-            "REVIEW_ID, CONTENT, IS_POSITIVE, USER_ID, FILM_ID, USEFUL " +
-            "FROM REVIEW " +
-            "WHERE FILM_ID = ? " +
-            "ORDER BY USEFUL DESC " +
-            "LIMIT ?";
-    private static final String FIND_ALL_REVIEWS_QUERY = "SELECT " +
-            "REVIEW_ID, CONTENT, IS_POSITIVE, USER_ID, FILM_ID, USEFUL " +
-            "FROM REVIEW " +
-            "ORDER BY USEFUL DESC " +
-            "LIMIT ?";
-    private static final String UPDATE_QUERY = "UPDATE REVIEW " +
-            "SET CONTENT = ?, IS_POSITIVE = ? " +
-            "WHERE REVIEW_ID = ?";
-    private static final String DELETE_REVIEW_QUERY =
-            "DELETE FROM REVIEW WHERE REVIEW_ID = ?";
-    private static final String FIND_REVIEW_REACTION_QUERY = "SELECT " +
-            "REVIEW_ID, USER_ID, IS_POSITIVE " +
-            "FROM REVIEW_LIKE " +
-            "WHERE REVIEW_ID = ? " +
-            "AND USER_ID = ?";
-    private static final String UPDATE_REVIEW_USEFUL_QUERY = "UPDATE REVIEW " +
-            "SET USEFUL = ? " +
-            "WHERE REVIEW_ID = ?";
-    private static final String ADD_REVIEW_REACTION_QUERY = "MERGE " +
-            "INTO REVIEW_LIKE (review_id, user_id, is_positive) KEY (review_id, user_id) " +
-            "VALUES (?, ?, ?)";
-    private static final String DELETE_REVIEW_REACTION_QUERY = "DELETE " +
-            "FROM REVIEW_LIKE " +
-            "WHERE REVIEW_ID = ? AND USER_ID = ?";
+    private static final String INSERT_QUERY = """
+            INSERT INTO
+            REVIEW(CONTENT, IS_POSITIVE, USER_ID, FILM_ID, USEFUL)
+            VALUES(?, ?, ?, ?, ?)
+            """;
+    private static final String FIND_BY_ID_QUERY = """
+            SELECT
+                REVIEW_ID,
+                CONTENT,
+                IS_POSITIVE,
+                USER_ID,
+                FILM_ID,
+                USEFUL
+            FROM REVIEW
+            WHERE REVIEW_ID = ?
+            """;
+    private static final String FIND_REVIEWS_BY_FILM_QUERY = """
+            SELECT
+                REVIEW_ID,
+                CONTENT,
+                IS_POSITIVE,
+                USER_ID,
+                FILM_ID,
+                USEFUL
+            FROM REVIEW
+            WHERE FILM_ID = ?
+            ORDER BY USEFUL DESC
+            LIMIT ?
+            """;
+    private static final String FIND_ALL_REVIEWS_QUERY = """
+            SELECT
+                REVIEW_ID,
+                CONTENT,
+                IS_POSITIVE,
+                USER_ID,
+                FILM_ID,
+                USEFUL
+            FROM REVIEW
+            ORDER BY USEFUL DESC
+            LIMIT ?
+            """;
+    private static final String UPDATE_QUERY = """
+            UPDATE REVIEW
+            SET CONTENT = ?, IS_POSITIVE = ?
+            WHERE REVIEW_ID = ?
+            """;
+    private static final String DELETE_REVIEW_QUERY = """
+            DELETE
+            FROM REVIEW
+            WHERE REVIEW_ID = ?
+            """;
+    private static final String FIND_REVIEW_REACTION_QUERY = """
+            SELECT
+                REVIEW_ID,
+                USER_ID,
+                IS_POSITIVE
+            FROM REVIEW_LIKE
+            WHERE REVIEW_ID = ?
+            AND USER_ID = ?;
+            """;
+    private static final String UPDATE_REVIEW_USEFUL_QUERY = """
+            UPDATE REVIEW
+            SET USEFUL = ?
+            WHERE REVIEW_ID = ?;
+            """;
+    private static final String ADD_REVIEW_REACTION_QUERY = """
+            MERGE
+            INTO REVIEW_LIKE (REVIEW_ID, USER_ID, IS_POSITIVE) KEY (REVIEW_ID, USER_ID)
+            VALUES (?, ?, ?)
+            """;
+    private static final String DELETE_REVIEW_REACTION_QUERY = """
+            DELETE
+            FROM REVIEW_LIKE
+            WHERE REVIEW_ID = ? AND USER_ID = ?
+            """;
 
 
     public ReviewDbStorage(JdbcTemplate jdbc, RowMapper<Review> mapper) {
@@ -74,8 +112,8 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
                 review.getFilmId(),
                 review.getUseful()
         );
-        review.setReviewId(id);
-        addFeedEvent(review.getUserId(), review.getReviewId(), FeedEntityType.REVIEW, FeedEventOperation.ADD);
+        review.setId(id);
+        addFeedEvent(review.getUserId(), review.getId(), FeedEntityType.REVIEW, FeedEventOperation.ADD);
         return review;
     }
 
@@ -100,17 +138,17 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
                 UPDATE_QUERY,
                 review.getContent(),
                 review.isPositive(),
-                review.getReviewId()
+                review.getId()
         );
-        addFeedEvent(review.getUserId(), review.getReviewId(), FeedEntityType.REVIEW, FeedEventOperation.UPDATE);
+        addFeedEvent(review.getUserId(), review.getId(), FeedEntityType.REVIEW, FeedEventOperation.UPDATE);
         return review;
     }
 
     @Override
     public boolean deleteReview(Review review) {
-        boolean result = delete(DELETE_REVIEW_QUERY, review.getReviewId());
+        boolean result = delete(DELETE_REVIEW_QUERY, review.getId());
         if (result) {
-            addFeedEvent(review.getUserId(), review.getReviewId(), FeedEntityType.REVIEW, FeedEventOperation.REMOVE);
+            addFeedEvent(review.getUserId(), review.getId(), FeedEntityType.REVIEW, FeedEventOperation.REMOVE);
         }
         return result;
     }
@@ -126,14 +164,12 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
 
     @Override
     public void addReviewReaction(int reviewId, int userId, boolean isPositiveReaction, int useful) {
-        //добавление лайка/дизлайка к отзыву
         update(ADD_REVIEW_REACTION_QUERY, reviewId, userId, isPositiveReaction);
         update(UPDATE_REVIEW_USEFUL_QUERY, useful, reviewId);
     }
 
     @Override
     public void deleteReviewReaction(int reviewId, int userId, int useful) {
-        // удаление лайка/дизлайка к отзыву
         update(DELETE_REVIEW_REACTION_QUERY, reviewId, userId);
         update(UPDATE_REVIEW_USEFUL_QUERY, useful, reviewId);
     }

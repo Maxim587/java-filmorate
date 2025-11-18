@@ -89,20 +89,8 @@ public class FilmService {
         }
 
         FilmMapper.updateFilmFields(filmToUpdate, newFilm);
-
-        // Обновляем жанры
-        if (newFilm.getGenres() == null) {
-            filmToUpdate.setGenres(Collections.emptySet());
-        } else {
-            filmToUpdate.setGenres(mapFilmGenres(newFilm.getGenres()));
-        }
-
-        // Обновляем режиссёров
-        if (newFilm.getDirectors() == null) {
-            filmToUpdate.setDirectors(Collections.emptySet());
-        } else {
-            filmToUpdate.setDirectors(mapFilmDirectors(newFilm.getDirectors()));
-        }
+        filmToUpdate.setGenres(mapFilmGenres(newFilm.getGenres()));
+        filmToUpdate.setDirectors(mapFilmDirectors(newFilm.getDirectors()));
 
         return FilmMapper.mapToFilmDto(filmStorage.updateFilm(filmToUpdate));
     }
@@ -121,18 +109,21 @@ public class FilmService {
                 .toList();
     }
 
-    // ВСПОМОГАТЕЛЬНЫЙ МЕТОД ДЛЯ МАППИНГА РЕЖИССЁРОВ
     private Set<Director> mapFilmDirectors(Set<DirectorRequestDto> filmRequestDirectors) {
         if (filmRequestDirectors == null || filmRequestDirectors.isEmpty()) {
             return Collections.emptySet();
         }
 
+        List<Integer> directorIds = filmRequestDirectors.stream().map(DirectorRequestDto::getId).toList();
+
+        Map<Integer, Director> directorsFromDb = filmStorage.getDirectorsByIds(directorIds).stream()
+                .collect(Collectors.toMap(Director::getId, Function.identity()));
+
         return filmRequestDirectors.stream()
-                .map(directorDto -> directorStorage.getDirectorById(directorDto.getId())
-                        .orElseThrow(() -> {
-                            log.info("Director not exists: {}", directorDto);
-                            return new NotFoundException("Режиссёр не существует id: " + directorDto.getId());
-                        }))
+                .map(director -> Optional.ofNullable(directorsFromDb.get(director.getId())).orElseThrow(() -> {
+                    log.info("Director not found: {}", director);
+                    return new NotFoundException("Режиссер не найден id: " + director.getId());
+                }))
                 .collect(Collectors.toSet());
     }
 
@@ -206,53 +197,6 @@ public class FilmService {
                 .toList();
     }
 
-    /**
-     * Get films which user might be interested in
-     */
-    public List<FilmDto> getRecommended(int userId) {
-        User user = userStorage.getUserById(userId);
-
-        if (user == null) {
-            log.info("Error on getting film recommendations. User not found id: {}", userId);
-            throw new NotFoundException("Ошибка определения рекоммендаций. Пользователь не найден");
-        }
-
-        // Find most similar user
-
-        Set<Integer> userLiked = getLikedFilmIds(userId);
-        int otherUserId = -1;
-        int maxLikesCount = 0;
-
-        for (User other : userStorage.getAllUsers()) {
-            if (other.getId().equals(userId)) {
-                continue;
-            }
-
-            int common = (int) getLikedFilmIds(other.getId())
-                    .stream()
-                    .filter(userLiked::contains)
-                    .count();
-
-            if (common > maxLikesCount) {
-                maxLikesCount = common;
-                otherUserId = other.getId();
-            }
-        }
-
-        // Get films liked by similar user but not by current one
-
-        if (otherUserId == -1) {
-            log.info("No similar user found for user id: {}", userId);
-            return Collections.emptyList();
-        }
-
-        return filmStorage
-                .getRecommended(userId, otherUserId)
-                .stream()
-                .map(FilmMapper::mapToFilmDto)
-                .toList();
-    }
-
     public List<FilmDto> searchFilms(String query, String by) {
         String[] searchBy = by.split(",");
         boolean searchByTitle = false;
@@ -274,9 +218,8 @@ public class FilmService {
                 .toList();
     }
 
-
     private Set<Genre> mapFilmGenres(Set<GenreRequestDto> filmRequestGenres) {
-        if (filmRequestGenres.isEmpty()) {
+        if (filmRequestGenres == null || filmRequestGenres.isEmpty()) {
             return Collections.emptySet();
         }
 
@@ -335,14 +278,13 @@ public class FilmService {
                 .toList();
     }
 
-    /**
-     * Get films liked by the user
-     */
-    private Set<Integer> getLikedFilmIds(int userId) {
-        return filmStorage
-                .getUserLikedFilms(userId)
-                .stream()
-                .map(Film::getId)
-                .collect(Collectors.toSet());
+    public List<FilmDto> getRecommended(int userId) {
+        List<Film> films = filmStorage.getRecommended(userId);
+        if (films.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return films.stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
     }
 }

@@ -12,14 +12,6 @@ public interface FilmStorage {
 
     List<Film> getAllFilms();
 
-    List<Film> getUserLikedFilms(int userId);
-
-    /**
-     * @param toUserId   For who recommendations are required
-     * @param fromUserId From who recommendations are provided
-     */
-    List<Film> getRecommended(int toUserId, int fromUserId);
-
     Film getFilmById(int filmId);
 
     Film updateFilm(Film newFilm);
@@ -55,4 +47,8 @@ public interface FilmStorage {
     List<Film> getCommonFilms(int userId, int friendId);
 
     List<Film> searchFilms(String query, boolean searchByTitle, boolean searchByDirector);
+
+    List<Film> getRecommended(int userId);
+
+    List<Director> getDirectorsByIds(List<Integer> directorIds);
 }
