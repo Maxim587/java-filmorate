@@ -68,11 +68,26 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             FIND_WITH_JOINS +
                     "JOIN FILM_LIKE fl ON f.FILM_ID = fl.FILM_ID " +
                     "WHERE fl.USER_ID = ?";
-    private static final String FIND_RECOMMENDED =
-            FIND_WITH_JOINS +
-                    "LEFT JOIN FILM_LIKE fl ON fl.FILM_ID = f.FILM_ID " +
-                    "JOIN FILM_LIKE fl_from ON fl_from.FILM_ID = f.FILM_ID AND fl_from.USER_ID = ? " +
-                    "WHERE f.FILM_ID NOT IN (SELECT FILM_ID FROM FILM_LIKE WHERE USER_ID = ?)";
+    private static final String RECOMMENDED_QUERY = """
+            WITH recommended_film_ids(FILM_ID) as (
+                SELECT FILM_ID --поиск фильмов пользователя с наибольшими пересечениями по лайкам
+                FROM FILM_LIKE
+                WHERE USER_ID = ( --поиск пользователя с наибольшими пересечениями по лайкам
+                                  SELECT fl2.USER_ID
+                                  FROM (SELECT * FROM FILM_LIKE WHERE USER_ID = ?) fl1
+                                  JOIN (SELECT * FROM FILM_LIKE WHERE USER_ID != ?) fl2
+                                  USING (film_id)
+                                  GROUP BY fl2.USER_ID
+                                  ORDER BY count(*) DESC
+                                  LIMIT 1
+                                 )
+                EXCEPT --исключение общих фильмов
+                SELECT FILM_ID
+                FROM FILM_LIKE
+                WHERE USER_ID = (?)
+            )""" +
+            BASE_QUERY + JOINS +
+            "JOIN recommended_film_ids USING(FILM_ID)";
     private static final String INSERT_FILM_QUERY = """
             INSERT INTO FILM(NAME, DESCRIPTION, RELEASE_DATE, DURATION, RATING_ID)
             VALUES (?, ?, ?, ?, ?)
@@ -231,37 +246,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         if (rawFilms.isEmpty()) {
             return Collections.emptyList();
         }
-        return groupValues(rawFilms);
-    }
-
-    @Override
-    public List<Film> getUserLikedFilms(int userId) {
-        List<Film> rawFilms = findMany(
-                FIND_FILM_BY_LIKE_USER_ID,
-                userId
-        );
-        if (rawFilms.isEmpty()) {
-            return rawFilms;
-        }
-
-        return groupValues(rawFilms);
-    }
-
-    @Override
-    public List<Film> getRecommended(
-            int toUserId,
-            int fromUserId
-    ) {
-        List<Film> rawFilms = findMany(
-                FIND_RECOMMENDED,
-                fromUserId,
-                toUserId
-        );
-
-        if (rawFilms.isEmpty()) {
-            return rawFilms;
-        }
-
         return groupValues(rawFilms);
     }
 
@@ -544,32 +528,9 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         return groupValues(rawFilms);
     }
 
-    //Удалить старые запросы. Убрать `ALT` в названии запроса, убрать пояснения, перенести наверх
-    private static final String RECOMMENDED_QUERY_ALT = """
-            WITH recommended_film_ids(FILM_ID) as (
-                SELECT FILM_ID --поиск фильмов пользователя с наибольшими пересечениями по лайкам
-                FROM FILM_LIKE
-                WHERE USER_ID = ( --поиск пользователя с наибольшими пересечениями по лайкам
-                                  SELECT fl2.USER_ID
-                                  FROM (SELECT * FROM FILM_LIKE WHERE USER_ID = ?) fl1
-                                  JOIN (SELECT * FROM FILM_LIKE WHERE USER_ID != ?) fl2
-                                  USING (film_id)
-                                  GROUP BY fl2.USER_ID
-                                  ORDER BY count(*) DESC
-                                  LIMIT 1
-                                 )
-                EXCEPT --исключение общих фильмов
-                SELECT FILM_ID
-                FROM FILM_LIKE
-                WHERE USER_ID = (?)
-            )""" +
-            BASE_QUERY + JOINS +
-            "JOIN recommended_film_ids USING(FILM_ID)";
-
-    //Удалить старый метод. Убрать в названии этого метода и запроса `Alt`
     @Override
-    public List<Film> getRecommendedAlt(int userId) {
-        List<Film> rawFilms = findMany(RECOMMENDED_QUERY_ALT, userId, userId, userId);
+    public List<Film> getRecommended(int userId) {
+        List<Film> rawFilms = findMany(RECOMMENDED_QUERY, userId, userId, userId);
         if (rawFilms.isEmpty()) {
             return rawFilms;
         }

@@ -12,10 +12,6 @@ public interface FilmStorage {
 
     List<Film> getAllFilms();
 
-    List<Film> getUserLikedFilms(int userId);
-
-    List<Film> getRecommended(int toUserId, int fromUserId);
-
     Film getFilmById(int filmId);
 
     Film updateFilm(Film newFilm);
@@ -52,7 +48,7 @@ public interface FilmStorage {
 
     List<Film> searchFilms(String query, boolean searchByTitle, boolean searchByDirector);
 
-    List<Film> getRecommendedAlt(int userId);
+    List<Film> getRecommended(int userId);
 
     List<Director> getDirectorsByIds(List<Integer> directorIds);
 }

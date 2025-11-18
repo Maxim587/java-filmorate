@@ -197,53 +197,6 @@ public class FilmService {
                 .toList();
     }
 
-    /**
-     * Get films which user might be interested in
-     */
-    public List<FilmDto> getRecommended(int userId) {
-        User user = userStorage.getUserById(userId);
-
-        if (user == null) {
-            log.info("Error on getting film recommendations. User not found id: {}", userId);
-            throw new NotFoundException("Ошибка определения рекоммендаций. Пользователь не найден");
-        }
-
-        // Find most similar user
-
-        Set<Integer> userLiked = getLikedFilmIds(userId);
-        int otherUserId = -1;
-        int maxLikesCount = 0;
-
-        for (User other : userStorage.getAllUsers()) {
-            if (other.getId().equals(userId)) {
-                continue;
-            }
-
-            int common = (int) getLikedFilmIds(other.getId())
-                    .stream()
-                    .filter(userLiked::contains)
-                    .count();
-
-            if (common > maxLikesCount) {
-                maxLikesCount = common;
-                otherUserId = other.getId();
-            }
-        }
-
-        // Get films liked by similar user but not by current one
-
-        if (otherUserId == -1) {
-            log.info("No similar user found for user id: {}", userId);
-            return Collections.emptyList();
-        }
-
-        return filmStorage
-                .getRecommended(userId, otherUserId)
-                .stream()
-                .map(FilmMapper::mapToFilmDto)
-                .toList();
-    }
-
     public List<FilmDto> searchFilms(String query, String by) {
         String[] searchBy = by.split(",");
         boolean searchByTitle = false;
@@ -325,19 +278,8 @@ public class FilmService {
                 .toList();
     }
 
-    /**
-     * Get films liked by the user
-     */
-    private Set<Integer> getLikedFilmIds(int userId) {
-        return filmStorage
-                .getUserLikedFilms(userId)
-                .stream()
-                .map(Film::getId)
-                .collect(Collectors.toSet());
-    }
-
-    public List<FilmDto> getRecommendedAlt(int userId) {
-        List<Film> films = filmStorage.getRecommendedAlt(userId);
+    public List<FilmDto> getRecommended(int userId) {
+        List<Film> films = filmStorage.getRecommended(userId);
         if (films.isEmpty()) {
             return Collections.emptyList();
         }

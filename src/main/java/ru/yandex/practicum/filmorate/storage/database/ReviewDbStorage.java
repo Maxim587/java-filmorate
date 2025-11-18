@@ -72,7 +72,7 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
             FROM REVIEW
             WHERE REVIEW_ID = ?
             """;
-    private static final String FIND_REVIEW_REACTION_QUERY = """ 
+    private static final String FIND_REVIEW_REACTION_QUERY = """
             SELECT
                 REVIEW_ID,
                 USER_ID,
