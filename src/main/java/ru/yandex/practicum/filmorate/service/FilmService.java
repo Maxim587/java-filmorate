@@ -89,20 +89,8 @@ public class FilmService {
         }
 
         FilmMapper.updateFilmFields(filmToUpdate, newFilm);
-
-        // Обновляем жанры
-        if (newFilm.getGenres() == null) {
-            filmToUpdate.setGenres(Collections.emptySet());
-        } else {
-            filmToUpdate.setGenres(mapFilmGenres(newFilm.getGenres()));
-        }
-
-        // Обновляем режиссёров
-        if (newFilm.getDirectors() == null) {
-            filmToUpdate.setDirectors(Collections.emptySet());
-        } else {
-            filmToUpdate.setDirectors(mapFilmDirectors(newFilm.getDirectors()));
-        }
+        filmToUpdate.setGenres(mapFilmGenres(newFilm.getGenres()));
+        filmToUpdate.setDirectors(mapFilmDirectors(newFilm.getDirectors()));
 
         return FilmMapper.mapToFilmDto(filmStorage.updateFilm(filmToUpdate));
     }
@@ -121,18 +109,21 @@ public class FilmService {
                 .toList();
     }
 
-    // ВСПОМОГАТЕЛЬНЫЙ МЕТОД ДЛЯ МАППИНГА РЕЖИССЁРОВ
     private Set<Director> mapFilmDirectors(Set<DirectorRequestDto> filmRequestDirectors) {
         if (filmRequestDirectors == null || filmRequestDirectors.isEmpty()) {
             return Collections.emptySet();
         }
 
+        List<Integer> directorIds = filmRequestDirectors.stream().map(DirectorRequestDto::getId).toList();
+
+        Map<Integer, Director> directorsFromDb = filmStorage.getDirectorsByIds(directorIds).stream()
+                .collect(Collectors.toMap(Director::getId, Function.identity()));
+
         return filmRequestDirectors.stream()
-                .map(directorDto -> directorStorage.getDirectorById(directorDto.getId())
-                        .orElseThrow(() -> {
-                            log.info("Director not exists: {}", directorDto);
-                            return new NotFoundException("Режиссёр не существует id: " + directorDto.getId());
-                        }))
+                .map(director -> Optional.ofNullable(directorsFromDb.get(director.getId())).orElseThrow(() -> {
+                    log.info("Director not found: {}", director);
+                    return new NotFoundException("Режиссер не найден id: " + director.getId());
+                }))
                 .collect(Collectors.toSet());
     }
 
@@ -274,9 +265,8 @@ public class FilmService {
                 .toList();
     }
 
-
     private Set<Genre> mapFilmGenres(Set<GenreRequestDto> filmRequestGenres) {
-        if (filmRequestGenres.isEmpty()) {
+        if (filmRequestGenres == null || filmRequestGenres.isEmpty()) {
             return Collections.emptySet();
         }
 
@@ -344,5 +334,15 @@ public class FilmService {
                 .stream()
                 .map(Film::getId)
                 .collect(Collectors.toSet());
+    }
+
+    public List<FilmDto> getRecommendedAlt(int userId) {
+        List<Film> films = filmStorage.getRecommendedAlt(userId);
+        if (films.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return films.stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
     }
 }

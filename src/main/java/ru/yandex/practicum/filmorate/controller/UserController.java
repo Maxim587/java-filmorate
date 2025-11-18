@@ -89,9 +89,15 @@ public class UserController {
         return userService.getUserFeed(id);
     }
 
+//    @GetMapping("/{id}/recommendations")
+//    public Collection<FilmDto> getRecommendedFilms(@PathVariable int id) {
+//        log.info("Start getting film recommendations for user id = {}", id);
+//        return filmService.getRecommended(id);
+//    }
+
     @GetMapping("/{id}/recommendations")
     public Collection<FilmDto> getRecommendedFilms(@PathVariable int id) {
         log.info("Start getting film recommendations for user id = {}", id);
-        return filmService.getRecommended(id);
+        return filmService.getRecommendedAlt(id);
     }
 }

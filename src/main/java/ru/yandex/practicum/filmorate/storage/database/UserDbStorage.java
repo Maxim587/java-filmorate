@@ -23,47 +23,75 @@ import java.util.Map;
 @Repository
 public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
 
-    private static final String FIND_ALL_QUERY =
-            "SELECT u.USER_ID, u.EMAIL, u.LOGIN, u.NAME, u.BIRTHDAY, f.FRIEND_ID, fs.STATUS " +
-                    "FROM USERS u " +
-                    "LEFT JOIN FRIENDSHIP f USING(USER_ID) " +
-                    "LEFT JOIN FRIENDSHIP_STATUS fs ON f.FRIENDSHIP_STATUS_ID = fs.FRIENDSHIP_STATUS_ID";
-    private static final String FIND_BY_ID_QUERY =
-            "SELECT u.USER_ID, u.EMAIL, u.LOGIN, u.NAME, u.BIRTHDAY, f.FRIEND_ID, fs.STATUS " +
-                    "FROM USERS u " +
-                    "LEFT JOIN FRIENDSHIP f USING(USER_ID) " +
-                    "LEFT JOIN FRIENDSHIP_STATUS fs ON f.FRIENDSHIP_STATUS_ID = fs.FRIENDSHIP_STATUS_ID " +
-                    "WHERE u.USER_ID = ?";
-    private static final String FIND_USERS_BY_IDS_QUERY =
-            "SELECT u.USER_ID, u.EMAIL, u.LOGIN, u.NAME, u.BIRTHDAY, f.FRIEND_ID, fs.STATUS " +
-                    "FROM USERS u " +
-                    "LEFT JOIN FRIENDSHIP f USING(USER_ID) " +
-                    "LEFT JOIN FRIENDSHIP_STATUS fs ON f.FRIENDSHIP_STATUS_ID = fs.FRIENDSHIP_STATUS_ID " +
-                    "WHERE u.USER_ID IN (:param)";
-    private static final String INSERT_QUERY = "INSERT INTO USERS(email, login, name, birthday)" +
-            "VALUES (?, ?, ?, ?)";
-    private static final String UPDATE_QUERY = "UPDATE USERS " +
-            "SET email = ?, login = ?, name = ?, birthday = ? " +
-            "WHERE user_id = ?";
-    private static final String UPDATE_FRIENDSHIP_STATUS_QUERY = "UPDATE FRIENDSHIP " +
-            "SET friendship_status_id = ? " +
-            "WHERE user_id = ? AND friend_id = ?;";
-    private static final String ADD_FRIEND_QUERY = "INSERT INTO FRIENDSHIP (user_id, friend_id, friendship_status_id) " +
-            "VALUES (?, ?, ?);";
-    private static final String DELETE_FRIEND_QUERY = "DELETE FROM FRIENDSHIP " +
-            "WHERE user_id = ? AND friend_id = ?";
-    private static final String FIND_USER_FRIENDS_QUERY = "SELECT u.USER_ID, u.EMAIL, u.LOGIN, u.NAME, u.BIRTHDAY, f2.FRIEND_ID, fs.STATUS " +
-            "FROM FRIENDSHIP f1 " +
-            "JOIN USERS u ON f1.FRIEND_ID = u.USER_ID " +
-            "LEFT JOIN FRIENDSHIP f2 ON u.USER_ID = f2.USER_ID left JOIN FRIENDSHIP_STATUS fs ON f2.FRIENDSHIP_STATUS_ID = fs.FRIENDSHIP_STATUS_ID " +
-            "WHERE f1.USER_ID = ? " +
-            "ORDER BY u.USER_ID";
-    private static final String DELETE_USER_QUERY = "DELETE FROM USERS WHERE user_id = ?";
-    private static final String GET_USER_FEED_QUERY = "SELECT " +
-            "EVENT_ID, \"TIMESTAMP\", USER_ID, ENTITY_ID, EVENT_TYPE, OPERATION " +
-            "FROM FEED " +
-            "WHERE USER_ID=?" +
-            "ORDER BY EVENT_ID";
+    private static final String BASE_QUERY = """
+            SELECT
+                u.USER_ID,
+                u.EMAIL,
+                u.LOGIN,
+                u.NAME,
+                u.BIRTHDAY,
+                f.FRIEND_ID,
+                fs.STATUS
+            FROM USERS u
+            LEFT JOIN FRIENDSHIP f USING(USER_ID)
+            LEFT JOIN FRIENDSHIP_STATUS fs ON f.FRIENDSHIP_STATUS_ID = fs.FRIENDSHIP_STATUS_ID
+            """;
+    private static final String FIND_ALL_QUERY = BASE_QUERY;
+    private static final String FIND_BY_ID_QUERY = BASE_QUERY +
+            " WHERE u.USER_ID = ?";
+    private static final String FIND_USERS_BY_IDS_QUERY = BASE_QUERY +
+            " WHERE u.USER_ID IN (:param)";
+    private static final String INSERT_QUERY = """
+            INSERT INTO
+            USERS(EMAIL, LOGIN, NAME, BIRTHDAY)
+            VALUES (?, ?, ?, ?)
+            """;
+    private static final String UPDATE_QUERY = """
+            UPDATE USERS
+            SET email = ?, LOGIN = ?, NAME = ?, BIRTHDAY = ?
+            WHERE USER_ID = ?
+            """;
+    private static final String UPDATE_FRIENDSHIP_STATUS_QUERY = """
+            UPDATE FRIENDSHIP
+            SET FRIENDSHIP_STATUS_ID = ?
+            WHERE USER_ID = ? AND FRIEND_ID = ?
+            """;
+    private static final String ADD_FRIEND_QUERY = """
+            INSERT INTO FRIENDSHIP (USER_ID, FRIEND_ID, FRIENDSHIP_STATUS_ID)
+            VALUES (?, ?, ?)
+            """;
+    private static final String DELETE_FRIEND_QUERY = """
+            DELETE FROM FRIENDSHIP
+            WHERE USER_ID = ? AND FRIEND_ID = ?
+            """;
+    private static final String FIND_USER_FRIENDS_QUERY = """
+            SELECT
+                u.USER_ID,
+                u.EMAIL,
+                u.LOGIN,
+                u.NAME,
+                u.BIRTHDAY,
+                f2.FRIEND_ID,
+                fs.STATUS
+            FROM FRIENDSHIP f1
+            JOIN USERS u ON f1.FRIEND_ID = u.USER_ID
+            LEFT JOIN FRIENDSHIP f2 ON u.USER_ID = f2.USER_ID
+            LEFT JOIN FRIENDSHIP_STATUS fs ON f2.FRIENDSHIP_STATUS_ID = fs.FRIENDSHIP_STATUS_ID
+            WHERE f1.USER_ID = ?
+            ORDER BY u.USER_ID
+            """;
+    private static final String DELETE_USER_QUERY = """
+            DELETE
+            FROM USERS
+            WHERE USER_ID = ?
+            """;
+    private static final String GET_USER_FEED_QUERY = """
+            SELECT
+            EVENT_ID, "TIMESTAMP", USER_ID, ENTITY_ID, EVENT_TYPE, OPERATION
+            FROM FEED
+            WHERE USER_ID=?
+            ORDER BY EVENT_ID
+            """;
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);

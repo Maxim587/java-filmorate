@@ -14,27 +14,28 @@ public class DirectorDbStorage extends BaseDbStorage<Director> implements Direct
 
     private static final String FIND_ALL_QUERY = """
             SELECT *
-            FROM director
-            ORDER BY director_id
+            FROM DIRECTOR
+            ORDER BY DIRECTOR_ID
             """;
     private static final String FIND_BY_ID_QUERY = """
             SELECT *
-            FROM director
-            WHERE director_id = ?
+            FROM DIRECTOR
+            WHERE DIRECTOR_ID = ?
             """;
     private static final String INSERT_QUERY = """
-            INSERT INTO director (name)
+            INSERT INTO
+            DIRECTOR (NAME)
             VALUES (?)
             """;
     private static final String UPDATE_QUERY = """
-            UPDATE director
-            SET name = ?
-            WHERE director_id = ?
+            UPDATE DIRECTOR
+            SET NAME = ?
+            WHERE DIRECTOR_ID = ?
             """;
     private static final String DELETE_QUERY = """
             DELETE
-            FROM director
-            WHERE director_id = ?
+            FROM DIRECTOR
+            WHERE DIRECTOR_ID = ?
             """;
 
     public DirectorDbStorage(JdbcTemplate jdbc, RowMapper<Director> mapper) {
