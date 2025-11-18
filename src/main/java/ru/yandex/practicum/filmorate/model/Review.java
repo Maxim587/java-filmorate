@@ -11,10 +11,10 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(of = {"reviewId"})
+@EqualsAndHashCode(of = {"id"})
 public class Review {
     @Positive(message = "Значение должно быть целым положительным числом")
-    private Integer reviewId;
+    private Integer id;
     @NotBlank(message = "Значение не должно быть пустым")
     private String content;
     private boolean isPositive;

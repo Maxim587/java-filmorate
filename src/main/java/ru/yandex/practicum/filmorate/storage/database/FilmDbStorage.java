@@ -46,28 +46,11 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             LEFT JOIN FILM_DIRECTOR fd ON f.FILM_ID = fd.FILM_ID
             LEFT JOIN DIRECTOR d ON fd.DIRECTOR_ID = d.DIRECTOR_ID
             """;
-    private static final String FIND_WITH_JOINS =
-            "SELECT " +
-                    "f.FILM_ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, f.RATING_ID, " +
-                    "r.NAME AS RATING_NAME, " +
-                    "g.GENRE_ID, g.NAME AS GENRE, " +
-                    "fl.USER_ID AS \"LIKE\", " +
-                    "d.DIRECTOR_ID, d.NAME AS DIRECTOR " +
-                    "FROM FILM f " +
-                    "LEFT JOIN RATING r ON f.RATING_ID = r.RATING_ID " +
-                    "LEFT JOIN FILM_GENRE fg ON f.FILM_ID = fg.FILM_ID " +
-                    "LEFT JOIN GENRE g ON fg.GENRE_ID = g.GENRE_ID " +
-                    "LEFT JOIN FILM_DIRECTOR fd ON f.FILM_ID = fd.FILM_ID " +
-                    "LEFT JOIN DIRECTOR d ON fd.DIRECTOR_ID = d.DIRECTOR_ID ";
     private static final String FIND_ALL_FILMS_QUERY = BASE_QUERY + JOINS;
     private static final String FIND_FILM_BY_ID_QUERY = BASE_QUERY + JOINS +
             "WHERE f.FILM_ID = ?";
     private static final String FIND_FILMS_BY_IDS_QUERY = BASE_QUERY + JOINS +
             "WHERE f.FILM_ID IN (:param)";
-    private static final String FIND_FILM_BY_LIKE_USER_ID =
-            FIND_WITH_JOINS +
-                    "JOIN FILM_LIKE fl ON f.FILM_ID = fl.FILM_ID " +
-                    "WHERE fl.USER_ID = ?";
     private static final String RECOMMENDED_QUERY = """
             WITH recommended_film_ids(FILM_ID) as (
                 SELECT FILM_ID --поиск фильмов пользователя с наибольшими пересечениями по лайкам
@@ -243,9 +226,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     @Override
     public List<Film> getAllFilms() {
         List<Film> rawFilms = findMany(FIND_ALL_FILMS_QUERY);
-        if (rawFilms.isEmpty()) {
-            return Collections.emptyList();
-        }
+
         return groupValues(rawFilms);
     }
 
@@ -435,24 +416,20 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
         List<Film> rawFilms = findMany(POPULAR_FILMS_BY_GENRE_AND_YEAR_QUERY, genreId, genreId, year, year, limit);
 
-        if (rawFilms.isEmpty()) {
-            return rawFilms;
-        }
-
         return groupValues(rawFilms);
     }
-
 
     @Override
     public List<Film> getCommonFilms(int userId, int friendId) {
         List<Film> rawFilms = findMany(COMMON_FILMS_QUERY, userId, friendId);
-        if (rawFilms.isEmpty()) {
-            return rawFilms;
-        }
+
         return groupValues(rawFilms);
     }
 
     private List<Film> groupValues(List<Film> rawFilms) {
+        if (rawFilms.isEmpty()) {
+            return Collections.emptyList();
+        }
         Map<Integer, Film> films = new LinkedHashMap<>();
         for (Film film : rawFilms) {
             films.compute(film.getId(), (id, flm) -> {
@@ -521,19 +498,13 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
         List<Film> rawFilms = findManyByParamList(FIND_FILMS_BY_IDS_QUERY, filmIds, mapper);
 
-        if (rawFilms.isEmpty()) {
-            return rawFilms;
-        }
-
         return groupValues(rawFilms);
     }
 
     @Override
     public List<Film> getRecommended(int userId) {
         List<Film> rawFilms = findMany(RECOMMENDED_QUERY, userId, userId, userId);
-        if (rawFilms.isEmpty()) {
-            return rawFilms;
-        }
+
         return groupValues(rawFilms);
     }
 }

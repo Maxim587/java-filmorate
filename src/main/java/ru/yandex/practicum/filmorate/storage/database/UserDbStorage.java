@@ -113,9 +113,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     @Override
     public List<User> getAllUsers() {
         List<User> rawUsers = findMany(FIND_ALL_QUERY);
-        if (rawUsers.isEmpty()) {
-            return rawUsers;
-        }
+
         return groupValues(rawUsers);
     }
 
@@ -164,13 +162,14 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     @Override
     public List<User> getUserFriends(int userId) {
         List<User> rawFriends = findMany(FIND_USER_FRIENDS_QUERY, userId);
-        if (rawFriends.isEmpty()) {
-            return rawFriends;
-        }
+
         return groupValues(rawFriends);
     }
 
     private List<User> groupValues(List<User> rawUsers) {
+        if (rawUsers.isEmpty()) {
+            return rawUsers;
+        }
         Map<Integer, User> users = new HashMap<>();
         for (User user : rawUsers) {
             users.compute(user.getId(), (id, usr) -> {

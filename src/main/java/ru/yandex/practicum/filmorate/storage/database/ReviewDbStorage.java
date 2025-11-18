@@ -112,8 +112,8 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
                 review.getFilmId(),
                 review.getUseful()
         );
-        review.setReviewId(id);
-        addFeedEvent(review.getUserId(), review.getReviewId(), FeedEntityType.REVIEW, FeedEventOperation.ADD);
+        review.setId(id);
+        addFeedEvent(review.getUserId(), review.getId(), FeedEntityType.REVIEW, FeedEventOperation.ADD);
         return review;
     }
 
@@ -138,17 +138,17 @@ public class ReviewDbStorage extends BaseDbStorage<Review> implements ReviewStor
                 UPDATE_QUERY,
                 review.getContent(),
                 review.isPositive(),
-                review.getReviewId()
+                review.getId()
         );
-        addFeedEvent(review.getUserId(), review.getReviewId(), FeedEntityType.REVIEW, FeedEventOperation.UPDATE);
+        addFeedEvent(review.getUserId(), review.getId(), FeedEntityType.REVIEW, FeedEventOperation.UPDATE);
         return review;
     }
 
     @Override
     public boolean deleteReview(Review review) {
-        boolean result = delete(DELETE_REVIEW_QUERY, review.getReviewId());
+        boolean result = delete(DELETE_REVIEW_QUERY, review.getId());
         if (result) {
-            addFeedEvent(review.getUserId(), review.getReviewId(), FeedEntityType.REVIEW, FeedEventOperation.REMOVE);
+            addFeedEvent(review.getUserId(), review.getId(), FeedEntityType.REVIEW, FeedEventOperation.REMOVE);
         }
         return result;
     }

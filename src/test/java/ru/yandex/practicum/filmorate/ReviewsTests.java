@@ -48,7 +48,7 @@ public class ReviewsTests {
     public void createReview() {
         Review review = reviewDbStorage.createReview(review0);
 
-        Optional<Review> dbReview = reviewDbStorage.getReviewById(review.getReviewId());
+        Optional<Review> dbReview = reviewDbStorage.getReviewById(review.getId());
         assertThat(dbReview.isPresent()).isTrue();
         assertThat(dbReview.get().getContent()).isEqualTo(review.getContent());
         assertThat(dbReview.get().isPositive()).isEqualTo(review.isPositive());
@@ -88,7 +88,7 @@ public class ReviewsTests {
     public void getReviewById() {
         reviewDbStorage.createReview(review0);
 
-        Optional<Review> reviewById = reviewDbStorage.getReviewById(review0.getReviewId());
+        Optional<Review> reviewById = reviewDbStorage.getReviewById(review0.getId());
         assertThat(reviewById.isPresent()).isTrue();
         assertThat(reviewById.get()).isEqualTo(review0);
     }
@@ -96,11 +96,11 @@ public class ReviewsTests {
     @Test
     public void updateReview() {
         Review oldReview = reviewDbStorage.createReview(review0);
-        Review newReview = new Review(oldReview.getReviewId(), "new content", false,
+        Review newReview = new Review(oldReview.getId(), "new content", false,
                 oldReview.getUserId(), oldReview.getFilmId(), oldReview.getUseful());
 
         reviewDbStorage.updateReview(newReview);
-        Optional<Review> dbReview = reviewDbStorage.getReviewById(oldReview.getReviewId());
+        Optional<Review> dbReview = reviewDbStorage.getReviewById(oldReview.getId());
         assertThat(dbReview.isPresent()).isTrue();
         assertThat(dbReview.get().getContent()).isEqualTo(newReview.getContent());
         assertThat(dbReview.get().isPositive()).isEqualTo(newReview.isPositive());
@@ -115,7 +115,7 @@ public class ReviewsTests {
         boolean deleted = reviewDbStorage.deleteReview(review);
 
         assertThat(deleted).isTrue();
-        assertThat(reviewDbStorage.getReviewById(review.getReviewId()).isEmpty()).isTrue();
+        assertThat(reviewDbStorage.getReviewById(review.getId()).isEmpty()).isTrue();
     }
 
     @Test
@@ -124,22 +124,22 @@ public class ReviewsTests {
         reviewDbStorage.createReview(review0);
 
         //добавляем реакцию
-        reviewDbStorage.addReviewReaction(review0.getReviewId(), user1.getId(), true, 1);
+        reviewDbStorage.addReviewReaction(review0.getId(), user1.getId(), true, 1);
         //получаем реакцию пользователя на отзыв
-        Optional<ReviewReaction> reaction = reviewDbStorage.getReviewReaction(review0.getReviewId(), user1.getId());
+        Optional<ReviewReaction> reaction = reviewDbStorage.getReviewReaction(review0.getId(), user1.getId());
         assertThat(reaction.isPresent()).isTrue(); //проверяем что есть
         assertThat(reaction.get().getUserId()).isEqualTo(user1.getId()); //проверяем что пользователь совпадает
         assertThat(reaction.get().isPositive()).isTrue(); //проверяем что реакция положительная
-        Optional<Review> reviewDb = reviewDbStorage.getReviewById(review0.getReviewId()); //получаем отзыв с реакцией
+        Optional<Review> reviewDb = reviewDbStorage.getReviewById(review0.getId()); //получаем отзыв с реакцией
         assertEquals(1, reviewDb.get().getUseful()); //проверяем, что полезность отзыва увеличена
 
 
         //удаляем реакцию
-        reviewDbStorage.deleteReviewReaction(review0.getReviewId(), user1.getId(), 0);
+        reviewDbStorage.deleteReviewReaction(review0.getId(), user1.getId(), 0);
         //получаем реакцию пользователя на отзыв
-        reaction = reviewDbStorage.getReviewReaction(review0.getReviewId(), user1.getId());
+        reaction = reviewDbStorage.getReviewReaction(review0.getId(), user1.getId());
         assertThat(reaction.isPresent()).isFalse(); //проверяем что реакции нет
-        reviewDb = reviewDbStorage.getReviewById(review0.getReviewId()); //получаем отзыв с реакцией
+        reviewDb = reviewDbStorage.getReviewById(review0.getId()); //получаем отзыв с реакцией
         assertEquals(0, reviewDb.get().getUseful()); //проверяем, что полезность отзыва уменьшена
 
     }
