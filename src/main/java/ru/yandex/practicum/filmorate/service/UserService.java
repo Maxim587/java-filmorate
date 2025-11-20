@@ -3,9 +3,11 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dto.user.FeedDto;
 import ru.yandex.practicum.filmorate.dto.user.NewUserDto;
 import ru.yandex.practicum.filmorate.dto.user.UpdateUserDto;
 import ru.yandex.practicum.filmorate.dto.user.UserDto;
+import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.DuplicateFriendException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -65,6 +67,10 @@ public class UserService {
     }
 
     public void addFriend(int userId, int friendId) {
+        if (userId == friendId) {
+            throw new ConditionsNotMetException("Пользователь не может добавить в друзья самого себя");
+        }
+
         User user = userStorage.getUserById(userId);
         if (user == null) {
             log.info("User with id = {} not found", userId);
@@ -147,5 +153,19 @@ public class UserService {
         return userStorage.findUsersByIds(commonFriendsIds).stream()
                 .map(UserMapper::mapToUserDto)
                 .toList();
+    }
+
+    public boolean deleteUserById(int userId) {
+        boolean deleted = userStorage.deleteUserById(userId);
+        if (!deleted) {
+            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
+        }
+        return true;
+    }
+
+    public List<FeedDto> getUserFeed(int userId) {
+        Optional.ofNullable(userStorage.getUserById(userId)).orElseThrow(() ->
+                new NotFoundException("Ошибка получения ленты пользователя. Пользователь с id = " + userId + " не найден"));
+        return userStorage.getUserFeed(userId);
     }
 }

@@ -4,16 +4,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.GenreRequestDto;
+import ru.yandex.practicum.filmorate.dto.director.DirectorRequestDto;
 import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.dto.film.NewFilmDto;
 import ru.yandex.practicum.filmorate.dto.film.UpdateFilmDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.*;
+import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -28,6 +27,7 @@ import java.util.stream.Collectors;
 public class FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+    private final DirectorStorage directorStorage;
 
     public FilmDto createFilm(NewFilmDto newFilmDto) {
         Mpa mpa = Optional.ofNullable(filmStorage.getRatingById(newFilmDto.getMpa().getId()))
@@ -42,6 +42,13 @@ public class FilmService {
         if (newFilmDto.getGenres() != null && !newFilmDto.getGenres().isEmpty()) {
             film.setGenres(mapFilmGenres(newFilmDto.getGenres()));
         }
+
+        if (newFilmDto.getDirectors() != null && !newFilmDto.getDirectors().isEmpty()) {
+            film.setDirectors(mapFilmDirectors(newFilmDto.getDirectors()));
+        }
+
+        log.info("Creating film with {} directors and {} genres",
+                film.getDirectors().size(), film.getGenres().size());
 
         return FilmMapper.mapToFilmDto(filmStorage.createFilm(film));
     }
@@ -82,12 +89,42 @@ public class FilmService {
         }
 
         FilmMapper.updateFilmFields(filmToUpdate, newFilm);
-
-        if (newFilm.getGenres() != null && !newFilm.getGenres().isEmpty()) {
-            filmToUpdate.setGenres(mapFilmGenres(newFilm.getGenres()));
-        }
+        filmToUpdate.setGenres(mapFilmGenres(newFilm.getGenres()));
+        filmToUpdate.setDirectors(mapFilmDirectors(newFilm.getDirectors()));
 
         return FilmMapper.mapToFilmDto(filmStorage.updateFilm(filmToUpdate));
+    }
+
+    public List<FilmDto> getFilmsByDirector(int directorId, String sortBy) {
+        directorStorage.getDirectorById(directorId)
+                .orElseThrow(() -> new NotFoundException("Режиссёр с id:" + directorId + " не найден"));
+
+        if (!"year".equalsIgnoreCase(sortBy) && !"likes".equalsIgnoreCase(sortBy)) {
+            throw new ValidationException("Параметр sortBy должен быть 'year' или 'likes'");
+        }
+
+        List<Film> films = filmStorage.getFilmsByDirector(directorId, sortBy);
+        return films.stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
+    private Set<Director> mapFilmDirectors(Set<DirectorRequestDto> filmRequestDirectors) {
+        if (filmRequestDirectors == null || filmRequestDirectors.isEmpty()) {
+            return Collections.emptySet();
+        }
+
+        List<Integer> directorIds = filmRequestDirectors.stream().map(DirectorRequestDto::getId).toList();
+
+        Map<Integer, Director> directorsFromDb = filmStorage.getDirectorsByIds(directorIds).stream()
+                .collect(Collectors.toMap(Director::getId, Function.identity()));
+
+        return filmRequestDirectors.stream()
+                .map(director -> Optional.ofNullable(directorsFromDb.get(director.getId())).orElseThrow(() -> {
+                    log.info("Director not found: {}", director);
+                    return new NotFoundException("Режиссер не найден id: " + director.getId());
+                }))
+                .collect(Collectors.toSet());
     }
 
     public List<Genre> getAllGenres() {
@@ -141,6 +178,12 @@ public class FilmService {
             throw new NotFoundException("Ошибка удаления лайка к фильму. Лайк не найден");
         }
 
+        User user = userStorage.getUserById(userId);
+        if (user == null) {
+            log.info("Error while deleting like. User not found id: {}", userId);
+            throw new NotFoundException("Ошибка удаления лайка к фильму. Пользователь не найден");
+        }
+
         filmStorage.deleteLike(filmId, userId);
     }
 
@@ -154,8 +197,35 @@ public class FilmService {
                 .toList();
     }
 
+    public List<FilmDto> searchFilms(String query, String by) {
+        String[] searchBy = by.split(",");
+        boolean searchByTitle = false;
+        boolean searchByDirector = false;
+
+        for (String param : searchBy) {
+            if ("title".equalsIgnoreCase(param.trim())) {
+                searchByTitle = true;
+            } else if ("director".equalsIgnoreCase(param.trim())) {
+                searchByDirector = true;
+            }
+        }
+        if (!searchByTitle && !searchByDirector) {
+            throw new ValidationException("Параметр 'by' должен содержать 'title' и/или 'director'");
+        }
+        List<Film> films = filmStorage.searchFilms(query, searchByTitle, searchByDirector);
+        return films.stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
     private Set<Genre> mapFilmGenres(Set<GenreRequestDto> filmRequestGenres) {
-        Map<Integer, Genre> genresFromDb = filmStorage.getAllGenres().stream()
+        if (filmRequestGenres == null || filmRequestGenres.isEmpty()) {
+            return Collections.emptySet();
+        }
+
+        List<Integer> genreIds = filmRequestGenres.stream().map(GenreRequestDto::getId).toList();
+
+        Map<Integer, Genre> genresFromDb = filmStorage.getGenresByIds(genreIds).stream()
                 .collect(Collectors.toMap(Genre::getId, Function.identity()));
 
         return filmRequestGenres.stream()
@@ -165,5 +235,56 @@ public class FilmService {
                 }))
                 .sorted(Comparator.comparing(Genre::getId))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    public boolean deleteFilmById(int filmId) {
+        boolean deleted = filmStorage.deleteFilmById(filmId);
+        if (!deleted) {
+            throw new NotFoundException("Фильм с id=" + filmId + " не найден");
+        }
+        return true;
+    }
+
+    public List<FilmDto> getPopularFilmsByGenreAndYear(Integer count, Integer genreId, Integer year) {
+        List<Film> films = filmStorage.getPopularFilmsByGenreAndYear(count, genreId, year);
+        if (films.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return films.stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
+    public List<FilmDto> getCommonFilms(int userId, int friendId) {
+        User user = userStorage.getUserById(userId);
+        if (user == null) {
+            log.info("Error while getting common films. User not found id: {}", userId);
+            throw new NotFoundException("Пользователь с id:" + userId + " не найден");
+        }
+
+        User friend = userStorage.getUserById(friendId);
+        if (friend == null) {
+            log.info("Error while getting common films. Friend not found id: {}", friendId);
+            throw new NotFoundException("Пользователь с id:" + friendId + " не найден");
+        }
+
+        List<Film> films = filmStorage.getCommonFilms(userId, friendId);
+        if (films.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return films.stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
+    public List<FilmDto> getRecommended(int userId) {
+        List<Film> films = filmStorage.getRecommended(userId);
+        if (films.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return films.stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
     }
 }

@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.dto.film.NewFilmDto;
@@ -33,9 +34,32 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public List<FilmDto> getPopular(@RequestParam(defaultValue = "10") int count) {
-        log.info("Start getting popular films");
+    public List<FilmDto> getPopular(
+            @RequestParam(defaultValue = "10") Integer count,
+            @RequestParam(required = false) Integer genreId,
+            @RequestParam(required = false) Integer year) {
+        log.info("Start getting popular films with count={}, genreId={}, year={}", count, genreId, year);
+
+        if (genreId != null || year != null) {
+            return filmService.getPopularFilmsByGenreAndYear(count, genreId, year);
+        }
+
         return filmService.getMostPopular(count);
+    }
+
+    @GetMapping("/director/{directorId}")
+    public List<FilmDto> getFilmsByDirector(@PathVariable int directorId,
+                                            @RequestParam(defaultValue = "year") String sortBy) {
+        log.info("Start getting films by director id: {} sorted by {}", directorId, sortBy);
+        return filmService.getFilmsByDirector(directorId, sortBy);
+    }
+
+    @GetMapping("/search")
+    public List<FilmDto> searchFilms(@RequestParam String query,
+                                     @RequestParam(defaultValue = "title,director") String by) {
+        log.info("Start searching films with query: {}, by: {}", query, by);
+
+        return filmService.searchFilms(query, by);
     }
 
     @PostMapping
@@ -64,4 +88,20 @@ public class FilmController {
     public void deleteLike(@PathVariable int id, @PathVariable int userId) {
         filmService.deleteLike(id, userId);
     }
+
+    @DeleteMapping("/{filmId}")
+    public ResponseEntity<Void> deleteFilm(@PathVariable int filmId) {
+        boolean deleted = filmService.deleteFilmById(filmId);
+        return deleted ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/common")
+    public List<FilmDto> getCommonFilms(
+            @RequestParam int userId,
+            @RequestParam int friendId) {
+        log.info("Start getting common films for userId={} and friendId={}", userId, friendId);
+        return filmService.getCommonFilms(userId, friendId);
+    }
+
 }
